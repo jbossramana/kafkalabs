@@ -1,3 +1,23 @@
+Kafka Server configuration with OAuth Configuration:
+====================================================
+
+# Enable SASL and OAuth
+sasl.enabled.mechanisms=OAUTHBEARER
+sasl.mechanism.inter.broker.protocol=OAUTHBEARER
+security.inter.broker.protocol=SASL_PLAINTEXT
+
+# OAuth properties
+sasl.jaas.config=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+  oauth.token.endpoint="https://<oauth-provider>/token" \
+  oauth.client.id="<your-client-id>" \
+  oauth.client.secret="<your-client-secret>";
+# Optional properties
+# Set this to allow client connections with no SSL/TLS
+allow.everyone.if.no.acl.found=true
+
+
+Consumer/Producer code
+======================
 
 1. Kafka consumer Java code with SSL properties and configuration for setting up ACLs:
 
