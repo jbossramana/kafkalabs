@@ -1,0 +1,146 @@
+Creating an AWS MSK pipeline where:
+
+-> S3 Source Connector reads data from an S3 bucket and sends it to a Kafka topic.
+-> Kafka Topic holds the data.
+-> S3 Sink Connector reads from the Kafka topic and writes it to another S3 bucket.
+
+
+Step 1: Create S3 Buckets:
+==========================
+
+We need two S3 buckets:
+
+Source Bucket: s3-source-bucket → Stores raw data
+Sink Bucket: s3-sink-bucket → Stores data coming from Kafka
+1️⃣ Create S3 Buckets
+Go to AWS Console → S3
+Click "Create Bucket"
+Enter Bucket Name:
+s3-source-bucket
+s3-sink-bucket
+
+Keep all default settings and click "Create Bucket"
+✅ S3 Buckets are ready!
+
+
+Step 2: Configure IAM Role for MSK Connect
+==========================================
+
+Go to AWS Console → IAM → Roles
+Click "Create Role"
+Select "AWS Service" → Choose "MSK Connect"
+Attach the following policies:
+AmazonS3FullAccess (or create a custom policy below)
+AmazonMSKFullAccess
+Custom Policy (if needed)
+If you want limited access, create a policy:
+
+Go to IAM → Policies → Create Policy -> Use this JSON:
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:GetObject", "s3:ListBucket"],
+      "Resource": [
+        "arn:aws:s3:::s3-source-bucket",
+        "arn:aws:s3:::s3-source-bucket/*",
+        "arn:aws:s3:::s3-sink-bucket",
+        "arn:aws:s3:::s3-sink-bucket/*"
+      ]
+    }
+  ]
+}
+
+Save the policy and attach it to the MSK Connect IAM role.
+✅ IAM role is now ready for MSK Connect.
+
+
+Step 3: Create Kafka Topic
+==========================
+
+We need a topic to hold the data coming from the S3 Source Connector.
+
+Go to AWS Console → Amazon MSK
+Select your MSK Cluster
+Click "View Client Information"
+Click "Create Topic"
+Create a topic:
+Name: s3-source-topic
+✅ Kafka topic is ready!
+
+
+Step 4: Upload Sample Data to S3 (Source Bucket)
+=================================================
+
+Now, we upload a sample JSON file into s3-source-bucket.
+
+Go to AWS Console → S3 → s3-source-bucket
+Click "Upload" → "Add Files"
+Create a JSON file (data.json) and upload it.
+[
+  {"id": 1, "name": "Alice", "order": "Laptop"},
+  {"id": 2, "name": "Bob", "order": "Phone"},
+  {"id": 3, "name": "Charlie", "order": "Tablet"}
+]
+
+
+Upload the file to s3-source-bucket/raw-data/data.json.
+✅ Data is ready in the S3 bucket!
+
+
+Step 5: Set Up S3 Source Connector (S3 → Kafka)
+===============================================
+
+Go to AWS Console → Amazon MSK → MSK Connect
+Click "Create Connector"
+Choose "Use AWS-Provided Plugin"
+Select "Amazon S3 Source Connector"
+Enter Connector Name: s3-source-connector
+Select the MSK Cluster
+IAM Role: Select the role created in Step 2
+S3 Bucket Name: s3-source-bucket
+Kafka Topic: s3-source-topic
+File Format: JSON
+File Filter Regex: .*\\.json
+Click "Next" → "Create Connector"
+✅ Now, the S3 Source Connector will read data.json and send it to s3-source-topic.
+
+
+Step 6: Verify Data in Kafka
+============================
+
+Go to AWS Console → Amazon MSK
+Select your MSK Cluster
+Click "View Client Information"
+Open a Kafka Consumer in AWS Console
+Consume messages from s3-source-topic
+
+
+Step 7: Set Up S3 Sink Connector (Kafka → S3)
+=============================================
+
+Go to AWS Console → Amazon MSK → MSK Connect
+Click "Create Connector"
+Choose "Use AWS-Provided Plugin"
+Select "Amazon S3 Sink Connector"
+Enter Connector Name: s3-sink-connector
+Select the MSK Cluster
+IAM Role: Select the role created in Step 2
+Input Kafka Topic: s3-source-topic
+S3 Bucket Name: s3-sink-bucket
+Choose File Format: JSON
+Click "Next" → "Create Connector"
+✅ Now, Kafka messages will be stored in s3-sink-bucket.
+
+
+Step 8: Verify Data in S3 (Sink Bucket)
+=======================================
+
+Go to AWS Console → S3 → s3-sink-bucket
+Navigate to the path where data is stored (s3-sink-bucket/kafka-output/)
+Download and open the JSON file
+
+
+
+
