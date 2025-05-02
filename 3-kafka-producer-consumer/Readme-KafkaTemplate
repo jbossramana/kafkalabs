@@ -1,0 +1,61 @@
+Producer send API returns a ListenableFuture object
+================================
+
+public void sendMessage(String message) {
+             
+    ListenableFuture<SendResult<String, String>> future = 
+      kafkaTemplate.send(topicName, message);
+     
+    future.addCallback(new ListenableFutureCallback<SendResult<String, String>>() {
+ 
+        @Override
+        public void onSuccess(SendResult<String, String> result) {
+            System.out.println("Sent message=[" + message + 
+              "] with offset=[" + result.getRecordMetadata().offset() + "]");
+        }
+        @Override
+        public void onFailure(Throwable ex) {
+            System.out.println("Unable to send message=["
+              + message + "] due to : " + ex.getMessage());
+        }
+    });
+}
+
+Consuming Messages
+=============
+@KafkaListener(topics = "topicName", groupId = "foo")
+public void listen(String message) {
+    System.out.println("Received Messasge in group foo: " + message);
+}
+
+
+
+Retrieval of one or more message headers using the @Header annotation in the listener:
+=======================================================
+
+@KafkaListener(topics = "topicName")
+public void listenWithHeaders(
+  @Payload String message, 
+  @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
+      System.out.println(
+        "Received Message: " + message"
+        + "from partition: " + partition);
+}
+
+
+Consuming Messages from a Specific Partition
+============================
+
+@KafkaListener(
+  topicPartitions = @TopicPartition(topic = "topicName",
+  partitionOffsets = {
+    @PartitionOffset(partition = "0", initialOffset = "0"), 
+    @PartitionOffset(partition = "3", initialOffset = "0")
+}))
+public void listenToParition(
+  @Payload String message, 
+  @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
+      System.out.println(
+        "Received Messasge: " + message"
+        + "from partition: " + partition);
+}

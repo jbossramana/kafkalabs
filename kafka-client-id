@@ -1,0 +1,26 @@
+In Kafka, the client ID is used to track the activities of individual clients in the Kafka cluster. Kafka brokers maintain a record of all 
+connected clients and their associated client IDs. This information is stored in a metadata log maintained by the Kafka cluster.
+
+To monitor client activity in Kafka, you can use the built-in command-line tool called kafka-consumer-groups or kafka-producer-perf-test. 
+These tools allow you to view the status of your Kafka consumers and producers, including their client IDs, the topics they are subscribed 
+to or publishing to, and the amount of data they have consumed or produced.
+
+For example, to view the status of a consumer group, you can run the following command:
+
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group my-group --describe
+
+
+This command will display information about all the consumers in the consumer group my-group, including their client IDs, the topics they are 
+subscribed to, the partition assignments, and the lag between the latest message available on a partition and the last offset consumed by the consumer.
+
+Similarly, to monitor the performance of a Kafka producer, you can use the kafka-producer-perf-test tool. This tool allows you to specify a 
+producer client ID and track its message production rate and latency.
+
+bin/kafka-producer-perf-test.sh --topic test-topic --num-records 100000 --record-size 1000 --throughput 100 --producer-props bootstrap.servers=localhost:9092
+client.id=my-producer
+
+
+In the above example, the kafka-producer-perf-test tool is used to simulate a producer that publishes 100,000 messages to the topic test-topic with 
+a record size of 1000 bytes and a throughput of 100 messages per second. The producer's client ID is set to my-producer.
+
+By monitoring client IDs in Kafka, you can gain insight into the performance of your Kafka applications and troubleshoot any issues that may arise.

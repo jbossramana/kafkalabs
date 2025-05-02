@@ -1,0 +1,39 @@
+GlobalKTable Use Case
+=====================
+
+A GlobalKTable is particularly useful when you have a small reference dataset that you need to join with a stream of events, and every instance of 
+your Kafka Streams application needs access to the entire reference dataset.
+
+Scenario: Enriching Transaction Data with User Information
+Imagine you have a stream of transaction events, and each transaction contains a user ID. You want to enrich these transactions with user information 
+(e.g., user name, address) stored in a Kafka topic. The user information is relatively static and small enough to be fully replicated across all 
+instances of your Kafka Streams application.
+
+Why Use GlobalKTable?
+Full Replication: Each instance of your Kafka Streams application will have a complete copy of the user information. This is efficient for lookups 
+because it avoids the need to fetch user information from remote partitions.
+
+Join with Stream: You can perform local lookups to enrich the transaction stream with user information.
+
+
+Example:
+========
+
+// GlobalKTable for user details
+GlobalKTable<String, String> userDetailsTable = builder.globalTable("user-details");
+
+// KStream for transactions
+KStream<String, String> transactionsStream = builder.stream("transactions");
+
+// Join transactions with user details
+KStream<String, String> enrichedTransactions = transactionsStream.join(
+          userDetailsTable,
+          (transactionKey, transactionValue) -> transactionKey,  // Key for joining
+            (transactionValue, userDetailsValue) -> transactionValue + " enriched with " + userDetailsValue // Value after join
+        );
+
+// Output the enriched transactions to a new topic
+enrichedTransactions.to("enriched-transactions");
+
+
+

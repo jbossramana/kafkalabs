@@ -1,0 +1,29 @@
+plugins {
+	id 'org.springframework.boot' version '2.6.4'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'java'
+}
+
+group = 'demo'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.apache.spark:spark-core_2.11:2.2.1'
+    implementation 'org.apache.spark:spark-streaming_2.11:2.2.1'
+    implementation 'org.apache.kafka:kafka-clients:1.0.0'
+    implementation 'org.apache.spark:spark-streaming-kafka-0-10_2.11:2.2.1'
+    implementation 'org.apache.spark:spark-sql_2.11:2.2.1'
+    implementation 'com.datastax.spark:spark-cassandra-connector_2.11:2.0.7'
+    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

@@ -1,0 +1,24 @@
+========================================================
+For windows : Download mysql from the below location:
+				|_https://dev.mysql.com/downloads/mysql/
+ 					   |_ (mysql-8.0.28-winx64.zip)
+		
+
+1. mysqld.exe --initialize --console
+[take the temporary password]
+
+2. mysqld.exe
+
+
+mysql client
+============
+mysql -uroot -p
+password: temporary password
+
+>ALTER USER 'root'@'localhost' IDENTIFIED BY 'root'
+
+mysql client connect
+====================
+mysql -uroot -proot
+
+========================================================

@@ -1,0 +1,10 @@
+kafka-console-producer.bat --broker-list localhost:9092 --topic stock-tick-table --property parse.key=true --property key.separator=":"
+>ABC:1000
+>XYZ:2000
+>ABC:3000
+>LMN:9000
+>ABC:
+
+Browser, point  to  QueryServer [to get state store information]
+http://localhost:7010/kt01-store/all
+

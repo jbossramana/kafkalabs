@@ -1,0 +1,28 @@
+Kafka provides:  (subscripe)
+Automatic group management & Partition assignment.
+Offset and consumer positions control.
+
+Advantages:
+Allows us to parallel process a topic.
+Automatically manages partition assignment.
+Detects entry/exit/failure of a consumer and perform partition rebalancing activity.
+
+Downside of automatic partition assignment is:
+
+We don't have control over the partition assignment. We can't decide which 
+partitions will be assigned to which consumer. 
+Kafka takes this decision. So, with a custom partitioning strategy; this automatic 
+partition assignment will create problems for us . 
+Exactly once behaviour can't be achieved
+
+
+Assign()
+
+
+create database demo;
+use demo;
+create table tss_data(skey varchar(50), svalue varchar(50));
+create table tss_offsets(topic_name varchar(50), partitions int, offset int);
+insert into tss_offsets values('SensorTopic1',0,0);
+insert into tss_offsets values('SensorTopic1',1,0);
+insert into tss_offsets values('SensorTopic1',2,0);

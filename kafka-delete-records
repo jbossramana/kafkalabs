@@ -1,0 +1,18 @@
+ubuntu@ubuntu-virtual-machine:~/Desktop/kafka/confluent-7.3.3/bin$ ./kafka-delete-records 
+
+This tool helps to delete records of the given partitions down to the specified offset.
+Option                                 Description                           
+------                                 -----------                           
+--bootstrap-server <String: server(s)  REQUIRED: The server to connect to.   
+  to use for bootstrapping>                                                  
+--command-config <String: command      A property file containing configs to 
+  config property file path>             be passed to Admin Client.          
+--help                                 Print usage information.              
+--offset-json-file <String: Offset     REQUIRED: The JSON file with offset   
+  json file path>                        per partition. The format to use is:
+                                       {"partitions":                        
+                                         [{"topic": "foo", "partition": 1,   
+                                         "offset": 1}],                      
+                                        "version":1                          
+                                       }                                     
+--version                              Display Kafka version. 

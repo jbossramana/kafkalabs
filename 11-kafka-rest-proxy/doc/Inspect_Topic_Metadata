@@ -1,0 +1,16 @@
+# Get a list of topics
+
+$ curl "http://localhost:8082/topics"
+  ["__consumer_offsets","_schemas","avrotest","binarytest","jsontest"]
+
+
+# Get info about one topic
+
+$ curl "http://localhost:8082/topics/avrotest"
+  {"name":"avrotest","configs":{},"partitions":[{"partition":0,"leader":0,"replicas":[{"broker":0,"leader":true,"in_sync":true}]}]}
+
+
+# Get info about a topic's partitions
+
+$ curl "http://localhost:8082/topics/avrotest/partitions"
+  [{"partition":0,"leader":0,"replicas":[{"broker":0,"leader":true,"in_sync":true}]}]

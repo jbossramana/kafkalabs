@@ -1,0 +1,104 @@
+There are two properties that control the commit timeout in Kafka consumers:
+
+max.poll.interval.ms: This property specifies the maximum time interval between two consecutive polls for new messages. If a consumer fails to poll
+for new messages within this interval, the consumer will be considered dead and its partitions will be rebalanced to other active consumers. 
+This property indirectly controls the commit timeout because the consumer must commit the offset before the next poll interval expires.
+
+auto.commit.interval.ms: This property specifies the frequency at which the consumer's offset is automatically committed to the broker. The default 
+value is 5000 ms (5 seconds), but it can be adjusted based on the use case and the volume of messages being processed. If a message takes longer than 
+the auto-commit interval to process, the consumer may not have a chance to commit its offset before the next automatic commit is scheduled. Therefore, 
+it's important to set this value high enough to allow the consumer to process messages and commit offsets within the same interval.
+
+It's worth noting that if a consumer is processing messages asynchronously and takes a long time to process a message, it may exceed the commit timeout 
+and cause the same message to be delivered twice. In such cases, the application may need to manually commit the offset after the message is processed 
+to ensure that the consumer doesn't receive it again.
+
+
+The producer provides several configuration options to control the connection timeout behavior:
+
+bootstrap.servers: This property specifies the list of brokers that the producer should use to bootstrap its initial connection. It's important to 
+provide a valid list of brokers that the producer can connect to, otherwise, it may fail to establish a connection.
+
+max.block.ms: This property specifies the maximum amount of time the producer will block before throwing an exception if it cannot establish a 
+connection with any of the specified brokers. The default value is 60,000ms (1 minute), but it can be adjusted based on the use case and the expected 
+network latency.
+
+retries: This property specifies the number of times the producer will retry connecting to a broker before giving up. The default value is 2147483647 
+(maximum integer value), which means the producer will retry indefinitely until a connection is established. It's important to set a reasonable value 
+for this property to avoid overloading the broker with connection requests.
+
+retry.backoff.ms: This property specifies the amount of time the producer will wait before retrying a failed connection attempt. The default value is 
+100ms, but it can be increased to reduce the load on the broker and improve the connection success rate.
+
+By default, the producer will attempt to establish a connection to a broker as soon as it's initialized. However, it's possible to delay the connection 
+attempt until the first message is sent by setting the linger.ms property to a non-zero value. This can help reduce the number of failed connection attempts 
+and improve the overall performance of the producer.
+
+max.in.flight.requests.per.connection
+Allowing retries without setting max.in.flight.requests.per.connection to 1 will potentially change the ordering of records because if two batches are sent to a
+single partition, and the first fails and is retried but the second succeeds, then the records in the second batch may appear first. If you rely on key-based ordering, 
+that can be an issue. By limiting the number of in-flight requests to 1 (default being 5), i.e., max.in.flight.requests.per.connection = 1, we can guarantee that Kafka 
+will preserve message order in the event that some messages will require multiple retries before they are successfully acknowledged.
+
+
+ There are several properties that control how followers synchronize with the leader:
+
+replica.fetch.min.bytes: This property specifies the minimum number of bytes that a follower replica should fetch from the leader. If the amount of 
+data available on the leader is less than this value, the follower will wait until more data is available before fetching it. The default value is 1 byte, 
+but it can be increased to reduce the number of fetch requests and improve network efficiency.
+
+replica.fetch.max.bytes: This property specifies the maximum number of bytes that a follower replica can fetch from the leader in a single request. 
+The default value is 1 MB, but it can be increased or decreased based on the expected size of messages and the available network bandwidth.
+
+replica.fetch.wait.max.ms: This property specifies the maximum amount of time that a follower replica should wait for data to become available on the 
+leader. If no new data is available within this time, the follower will send a fetch request to the leader anyway. The default value is 500 ms, but it 
+can be increased or decreased based on the expected latency and the network conditions.
+
+replica.fetch.backoff.ms: This property specifies the amount of time that a follower replica should wait before retrying a failed fetch request. 
+The default value is 1000 ms, but it can be increased or decreased based on the expected latency and the network conditions.
+
+replica.lag.time.max.ms: This property specifies the maximum time that a follower replica is allowed to be behind the leader before it's considered "lagging". 
+If a follower is lagging by more than this amount of time, it will trigger a rebalance to redistribute the partitions among the available replicas.
+The default value is 10,000 ms (10 seconds), but it can be increased or decreased based on the expected replication delay and the desired consistency level.
+
+unclean.leader.election.enable
+Indicates whether to enable replicas not in the ISR set to be elected as leader as a last resort, even though doing so may result in data loss
+
+Type:	boolean
+Default:	false
+Valid Values:	
+Importance:	high
+Update Mode:	cluster-wide
+
+
+
+
+log.cleanup.policy
+The default cleanup policy for segments beyond the retention window. A comma separated list of valid policies. Valid policies are: "delete" and "compact"
+
+Type:	list
+Default:	delete
+Valid Values:	[compact, delete]
+Importance:	medium
+Update Mode:	cluster-wide
+
+
+consumer group : heartbeat
+
+If a consumer fails to send a heartbeat within a predefined timeout period, the broker considers it as inactive or failed. The group coordinator 
+then initiates a rebalance process to reassign the partitions of the failed consumer to the remaining active consumers in the group.
+
+The heartbeat interval is configurable and can be set by the consumer using the heartbeat.interval.ms property. By default, it is set to 
+3 seconds in the Kafka consumer configuration. The timeout for detecting an unresponsive consumer is controlled by the broker-side configuration 
+parameter session.timeout.ms (default: 10 seconds) and max.poll.interval.ms (default: 5 minutes).
+
+
+auto.leader.rebalance.enable
+Enables auto leader balancing. A background thread checks the distribution of partition leaders at regular intervals, configurable by `leader.imbalance.check.interval.seconds`. If the leader imbalance exceeds `leader.imbalance.per.broker.percentage`, leader rebalance to the preferred leader for partitions is triggered.
+
+Type:	boolean
+Default:	true
+Valid Values:	
+Importance:	high
+Update Mode:	read-only
+

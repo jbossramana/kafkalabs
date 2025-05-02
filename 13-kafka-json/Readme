@@ -1,0 +1,9 @@
+PostMan-> POST request -> http://localhost:8080/send
+
+{
+
+	"make": "800",
+	"manufacturer": "maruti",
+	"id": "101"
+
+}

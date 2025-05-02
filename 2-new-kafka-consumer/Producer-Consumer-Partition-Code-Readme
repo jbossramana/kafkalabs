@@ -1,0 +1,220 @@
+import org.apache.kafka.clients.producer.*;
+import java.util.Properties;
+
+public class KafkaProducerExample {
+    public static void main(String[] args) {
+        // Kafka producer properties
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092");  
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+        // Create Kafka producer
+        Producer<String, String> producer = new KafkaProducer<>(props);
+
+        // Send messages to test-topic
+        String topic = "test-topic";
+        int numPartitions = 3;
+
+        for (int i = 0; i < 10; i++) {
+            String message = "Message " + i;
+
+            // Send message without specifying partition or key
+            producer.send(new ProducerRecord<>(topic, message), new Callback() {
+                @Override
+                public void onCompletion(RecordMetadata metadata, Exception exception) {
+                    if (exception != null) {
+                        exception.printStackTrace();
+                    } else {
+                        System.out.println("Message sent to partition " + metadata.partition()
+                                + " with offset " + metadata.offset());
+                    }
+                }
+            });
+        }
+
+        // Close producer
+        producer.close();
+    }
+}
+
+
+
+
+
+import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.TopicPartition;
+import java.util.Collections;
+import java.util.Properties;
+
+public class KafkaConsumerExample {
+    public static void main(String[] args) {
+        // Kafka consumer properties
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092");  
+        props.put("group.id", "test-consumer-group");
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+        // Create Kafka consumer
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
+
+        // Subscribe to the topic
+        String topic = "test-topic";
+        consumer.subscribe(Collections.singletonList(topic));
+
+        try {
+            // Poll for new messages
+            while (true) {
+                ConsumerRecords<String, String> records = consumer.poll(1000);
+
+                // Process received records
+                for (ConsumerRecord<String, String> record : records) {
+                    System.out.println("Received message: " + record.value()
+                            + " from partition " + record.partition()
+                            + " with offset " + record.offset());
+                }
+
+                // Get assigned partitions
+                for (TopicPartition partition : consumer.assignment()) {
+                    System.out.println("Consumer assigned to partition " + partition.partition());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            // Close the consumer on exit
+            consumer.close();
+        }
+    }
+}
+
+
+
+import org.apache.kafka.clients.producer.*;
+import org.apache.kafka.common.serialization.StringSerializer;
+import java.util.Properties;
+
+public class KafkaProducerExampleWithKey {
+    public static void main(String[] args) {
+        // Kafka producer properties
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092");  
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+        // Create Kafka producer
+        Producer<String, String> producer = new KafkaProducer<>(props);
+
+        // Send messages to test-topic
+        String topic = "test-topic";
+     
+
+        for (int i = 0; i < 10; i++) {
+            String key = "Key-" + i;
+            String message = "Message " + i;
+
+            // Send message with key
+            producer.send(new ProducerRecord<>(topic, key, message), new Callback() {
+                @Override
+                public void onCompletion(RecordMetadata metadata, Exception exception) {
+                    if (exception != null) {
+                        exception.printStackTrace();
+                    } else {
+                        System.out.println("Message sent to partition " + metadata.partition()
+                                + " with offset " + metadata.offset());
+                    }
+                }
+            });
+        }
+
+        // Close producer
+        producer.close();
+    }
+}
+
+
+
+
+import org.apache.kafka.clients.producer.*;
+import org.apache.kafka.common.serialization.StringSerializer;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+
+public class KafkaProducerExampleWithSameKey {
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        // Kafka producer properties
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092");  
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+        // Create Kafka producer
+        Producer<String, String> producer = new KafkaProducer<>(props);
+
+        // Send messages to test-topic
+        String topic = "test-topic";
+   
+           // Create a list to hold account transactions
+        List<Map.Entry<String, Double>> accountTransactions = new ArrayList<>();
+        accountTransactions.add(new AbstractMap.SimpleEntry<>("account1", 100.0));
+        accountTransactions.add(new AbstractMap.SimpleEntry<>("account2", 500.0));
+        accountTransactions.add(new AbstractMap.SimpleEntry<>("account3", 200.0));
+        accountTransactions.add(new AbstractMap.SimpleEntry<>("account1", 500.0));
+        accountTransactions.add(new AbstractMap.SimpleEntry<>("account2", 250.0));
+        accountTransactions.add(new AbstractMap.SimpleEntry<>("account3", 300.0));
+        accountTransactions.add(new AbstractMap.SimpleEntry<>("account1", 200.0));
+        accountTransactions.add(new AbstractMap.SimpleEntry<>("account2", 350.0));
+        accountTransactions.add(new AbstractMap.SimpleEntry<>("account3", 400.0));
+        accountTransactions.add(new AbstractMap.SimpleEntry<>("account1", 600.0));
+        accountTransactions.add(new AbstractMap.SimpleEntry<>("account2", 750.0));
+        accountTransactions.add(new AbstractMap.SimpleEntry<>("account3", 800.0));
+        accountTransactions.add(new AbstractMap.SimpleEntry<>("account14", 600.0));
+        accountTransactions.add(new AbstractMap.SimpleEntry<>("account14", 750.0));
+        accountTransactions.add(new AbstractMap.SimpleEntry<>("account15", 800.0));
+        accountTransactions.add(new AbstractMap.SimpleEntry<>("account15", 600.0));
+        accountTransactions.add(new AbstractMap.SimpleEntry<>("account7", 750.0));
+        accountTransactions.add(new AbstractMap.SimpleEntry<>("account7", 800.0));
+
+        // Sending each account transaction to Kafka
+        for (Map.Entry<String, Double> entry : accountTransactions) {
+            String key = entry.getKey();
+            Double value = entry.getValue();
+            String message = key + ":" + value;
+
+            // Send message with key
+            ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, message);
+            producer.send(record, (metadata, exception) -> {
+                if (exception != null) {
+                    exception.printStackTrace();
+                } else {
+                    System.out.println("Message sent to partition " + metadata.partition()
+                            + " with offset " + metadata.offset());
+                }
+            }).get(); // Ensuring synchronous sending for the sake of example, not recommended in production
+        }
+
+        // Close producer
+        producer.close();
+    }
+}
+
+
+
+public class PartitionKeyExample {
+    public static void main(String[] args) {
+        // Test different keys to find one that results in partition 1
+        String[] keys = {"account1", "account2", "account3", "account4"};
+
+        for (String key : keys) {
+            int partition = Math.abs(key.hashCode()) % 3;
+            if (partition == 1) {
+                System.out.println("Key: " + key + " results in partition 1.");
+                break;
+            }
+        }
+    }
+}
+
+
+

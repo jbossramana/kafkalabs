@@ -1,0 +1,15 @@
+1. To start zookeeper:
+
+zookeeper-server-start.bat  ../../config/zookeeper.properties
+zookeeper-server-stop.bat  ../../config/zookeeper.properties
+
+2. To start Kafka
+
+kafka-server-start.bat  ../../config/server.properties
+
+kafka-server-stop.bat  ../../config/server.properties
+
+3. Create a topic with 3 partitions
+kafka-topics.bat --bootstrap-server localhost:9092 --create --topic SensorTopic1 --partitions 3
+
+

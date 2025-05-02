@@ -1,0 +1,5 @@
+Test the application:
+ 
+ POST-> http://localhost:8080/kafka/producer
+ 
+ {"firstname":"maharshi", "lastname":"raghav", "email":"raghav@test.com"}

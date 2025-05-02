@@ -1,0 +1,14 @@
+spring:
+  kafka:
+   bootstrap-servers: localhost:9092
+   topic:
+       avro.t
+       
+ 
+  main:
+    allow-bean-definition-overriding: true
+
+server:
+  port: 8080
+  servlet:
+    context-path: /avro

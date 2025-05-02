@@ -1,0 +1,56 @@
+======================================================
+Cassandra - windows setup
+ 
+1. Requires Python version 2.7.8 and jdk version 1.8
+2. apache-cassandra version 3.11.9
+=====================================================
+ 
+Start Kaffka
+
+Start zookeeper with default configurations
+
+    bin/zookeeper-server-start.sh config/zookeeper.properties
+
+Start kaffka server with default configurations. With the zookeeper running, open a new terminal window.
+
+    bin/kafka-server-start.sh config/server.properties
+
+Create new topic in kaffka. Topic name is “test01”
+
+    kafka-topics.bat –create –zookeeper localhost:2181 –replication-factor 1 –partitions 1 –topic test01
+
+Start Cassandra
+
+Starting cassandra server
+
+    cassandra -f
+
+With the cassandra running, open a new terminal window and
+access the Cassandra Query Language shell.
+
+    cqlsh
+
+Create new keyspace
+
+    CREATE KEYSPACE test01 WITH REPLICATION = { 'class': 'SimpleStrategy', 'replication_factor': 1 };
+
+To view all keyspaces use
+
+    DESCRIBE KEYSPACES;
+
+Switch keyspace
+
+    USE test01;
+
+Create a table
+
+    CREATE TABLE users ( id UUID PRIMARY KEY, lastname text, firstname text );
+
+Start Spark Shell
+
+spark-shell
+    
+    
+
+
+ 
