@@ -2,6 +2,8 @@ zookeeper-server-start.bat ..\..\config\zookeeper.properties
 
 kafka-server-start.bat ..\..\config\server.properties
 
+kafka-topics.bat --bootstrap-server localhost:9092 --create --topic order-topic --partitions 3 --replication-factor 1
+
 kafka-topics.bat --bootstrap-server localhost:9092 --describe --topic order-topic
 
 kafka-console-producer.bat --bootstrap-server localhost:9092 --topic  order-topic --property "parse.key=true" --property "key.separator=:"
