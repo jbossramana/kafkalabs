@@ -28,3 +28,25 @@ jdbc:h2:mem:ordersdb
 jdbc:h2:mem:paymentsdb
 jdbc:h2:mem:inventorydb
 jdbc:h2:mem:shipmentdb
+
+
+Success scenario:
+
+post localhost:8082/inventory
+
+{
+"item":"books",
+"quantity":200
+}
+
+post  localhost:8080/order
+
+{
+"item":"books",
+"quantity":10,
+"amount":1000,
+"address":"chennai",
+"paymentMode":"credit card"
+}
+
+
