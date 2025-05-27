@@ -24,3 +24,7 @@ kafka-topics.bat --bootstrap-server localhost:9092 --create --topic new-payments
 kafka-topics.bat --bootstrap-server localhost:9092 --create --topic reversed-payments --partitions 1 --replication-factor 1
 
 
+jdbc:h2:mem:ordersdb
+jdbc:h2:mem:paymentsdb
+jdbc:h2:mem:inventorydb
+jdbc:h2:mem:shipmentdb
