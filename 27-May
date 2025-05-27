@@ -9,3 +9,18 @@ kafka-topics.bat --bootstrap-server localhost:9092 --describe --topic order-topi
 kafka-console-producer.bat --bootstrap-server localhost:9092 --topic  order-topic --property "parse.key=true" --property "key.separator=:"
 
 kafka-console-consumer.bat  --bootstrap-server localhost:9092 --topic  order-topic --property print.key=true --property key.separator=":" --group og1 --from-beginning
+
+
+kafka-topics.bat --bootstrap-server localhost:9092 --create --topic new-orders  --partitions 1 --replication-factor 1
+
+kafka-topics.bat --bootstrap-server localhost:9092 --create --topic reversed-orders --partitions 1 --replication-factor 1
+
+kafka-topics.bat --bootstrap-server localhost:9092 --create --topic new-inventory --partitions 1 --replication-factor 1
+
+kafka-topics.bat --bootstrap-server localhost:9092 --create --topic reversed-inventory --partitions 1 --replication-factor 1
+
+kafka-topics.bat --bootstrap-server localhost:9092 --create --topic new-payments --partitions 1 --replication-factor 1
+
+kafka-topics.bat --bootstrap-server localhost:9092 --create --topic reversed-payments --partitions 1 --replication-factor 1
+
+
