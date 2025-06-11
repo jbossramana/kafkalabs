@@ -2,3 +2,4 @@
 
 ./kafka-console-consumer --bootstrap-server localhost:9092 --topic test-topic --from-beginning
 
+./kafka-consumer-groups --bootstrap-server localhost:9092 --group cg1 --reset-offsets --to-earliest --execute --topic first-topic
