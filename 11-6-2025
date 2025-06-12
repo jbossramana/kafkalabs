@@ -12,3 +12,8 @@ sh zookeeper-server-start.sh ../config/zookeeper.properties
 sh kafka-server-start.sh ../config/server1.properties
 
 sh kafka-topics.sh --bootstrap-server localhost:9092 --create --topic cluster-topic --partitions 3 --replication-factor 3
+
+
+        props.put(ProducerConfig.ACKS_CONFIG, "all");
+        props.put(ProducerConfig.RETRIES_CONFIG, 100);
+        props.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, 5000);
