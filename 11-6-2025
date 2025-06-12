@@ -6,3 +6,5 @@
 
 
 sh zookeeper-server-start.sh ../config/zookeeper.properties
+
+ sh zookeeper-shell.sh localhost:2181
