@@ -10,3 +10,5 @@ sh zookeeper-server-start.sh ../config/zookeeper.properties
  sh zookeeper-shell.sh localhost:2181
 
 sh kafka-server-start.sh ../config/server1.properties
+
+sh kafka-topics.sh --bootstrap-server localhost:9092 --create --topic cluster-topic --partitions 3 --replication-factor 3
