@@ -20,3 +20,7 @@ sh kafka-topics.sh --bootstrap-server localhost:9092 --create --topic cluster-to
 
 
 sh kafka-configs.sh --bootstrap-server localhost:9092 --entity-type topics --entity-name cluster-topic --add-config min.insync.replicas=3 --alter
+
+
+sh kafka-console-producer.sh --bootstrap-server localhost:9005 --topic  test-topic --property "parse.key=true" --property "key.separator=:"
+
