@@ -27,3 +27,4 @@ sh kafka-console-producer.sh --bootstrap-server localhost:9005 --topic  test-top
 
 sh kafka-run-class.sh kafka.tools.DumpLogSegments --deep-iteration --print-data-log --files /home/ubuntu/Desktop/kafka/server-logs/kafka/test-topic-0/00000000000000000000.log
 
+./kafka-run-class  kafka.tools.GetOffsetShell --bootstrap-server localhost:9005 --topic test-topic --time 1749809168492 
