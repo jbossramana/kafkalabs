@@ -1,1 +1,1 @@
-will be updated in next week
+confluent-hub install confluentinc/kafka-connect-jdbc:5.4.11
