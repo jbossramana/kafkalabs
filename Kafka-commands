@@ -23,7 +23,7 @@ sh kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic first-top
 To display the logs in readable format
 sh kafka-run-class.sh kafka.tools.DumpLogSegments --deep-iteration --print-data-log --files  /tmp/kafka-logs/test-topic-0/00000000000000000000.log
 
-To display the log end offset for each partition
+To display the log end offset for each partition  [kafka.tools.GetOffsetShell class deprecated in confluent 7.9.2 version, use AdminClient code]
 
 sh kafka-run-class.sh kafka.tools.GetOffsetShell --bootstrap-server localhost:9092 --topic test-topic
 
@@ -36,7 +36,7 @@ To reset the offsets to the beginning of each partition
 sh kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group tg3  --reset-offsets --to-earliest --execute --topic test-topic
 
 
-Check offset for given timestamp
+Check offset for given timestamp  [kafka.tools.GetOffsetShell class deprecated in confluent 7.9.2 version, use AdminClient code]
 
 sh kafka-run-class.sh  kafka.tools.GetOffsetShell --bootstrap-server localhost:9092 --topic test-topic --time 1709548873002
 
