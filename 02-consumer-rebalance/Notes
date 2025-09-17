@@ -1,0 +1,31 @@
+Kafka Rebalance scenario
+=========================
+
+Suppose, we have a situation where we got a lot of data using the poll method, 
+and it is going to take some reasonable time to complete the processing for 
+all the records. If we are taking a lot of time to process your records, we will have
+two types of risks.
+
+The first risk is the delay in next pool, because you are busy processing data from
+the last call. If we don't poll for a long, the group coordinator might assume that 
+we are dead and trigger a rebalance activity. 
+We don't want that to happen, Right? Because we were not dead, we were 
+computing.
+
+The second risk is also related to rebalancing. The coordinator triggers a rebalance 
+activity for some other reason while we are processing an extensive list of 
+messages.
+
+
+ The current partitions will be taken away from you and reassigned to some other
+ consumer. In such cases, we would want to commit whatever we have already 
+ processed before the ownership of the partition is taken away from us. 
+ 
+ And the new owner of the partition is supposed to start consuming it from the last 
+ committed offset.
+ 
+ Kafka API allows us to specify a ConsumerRebalanceListener class. This class
+ offers two methods.
+
+ >onPartitionsRevoked
+ >onPartitionsAssigned

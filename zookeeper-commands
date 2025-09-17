@@ -1,0 +1,38 @@
+Zookeeper command line features:
+❑ Create nodes, sub nodes, etc.,
+❑ Get/Set data for a node
+❑ Watch a node
+❑ Delete a node
+
+➢ zookeeper-shell.bat  localhost:2181
+➢ help
+
+
+Zookeeper simple commands (create, get, set, rmr, ls)
+➢ create /test-node "demo"
+➢ ls /test-node
+➢ get /test-node
+➢ set /test-node "new-demo"
+➢ create /test-node/ex1 "sample example1"
+➢ create /test-node/ex2 "sample example2"
+➢ ls /test-node
+➢ rmr /test-node/ex2
+
+Kafka broker, Topics information
+1. To connect zookeeper from CLI
+zookeeper-shell.bat localhost:2181
+
+2. to get help
+help
+
+3. list of active brokers
+ls /brokers/ids
+
+4. list of topics
+ls /brokers/topics
+
+5. To get detailed information of the broker id '0'
+get /brokers/ids/0
+
+6. to display history
+history

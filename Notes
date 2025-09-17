@@ -1,0 +1,18 @@
+Kafka API's:
+
+1. Producer API
+2. Consumer API
+3. Streaming API
+4. Connector API
+
+Message Destination:
+1. Queue : Point to Point Communication
+2. Topic : Publish and Subscribe
+
+Kafka supports Topic
+
+log.cleanup.policy
+|_ delete (default)  -> insertions
+|_ compact  -> upsertions (table)
+
+

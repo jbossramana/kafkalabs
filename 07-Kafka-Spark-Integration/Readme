@@ -1,0 +1,11 @@
+
+Functional Programming?
+
+Spark is a language that was developed using Scala, and Scala indeed is a Functional Programming language.
+Functional programming (often abbreviated FP) is the process of writing code by accumulating pure functions, 
+avoiding shared states, mutable data, and side effects. Functional programming is declarative rather than 
+imperative, and complete application flows through functions that do not store or modify the input.
+
+
+ ./kafka-console-producer  --bootstrap-server  localhost:9092  --topic test
+

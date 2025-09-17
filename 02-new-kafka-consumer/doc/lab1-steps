@@ -1,0 +1,79 @@
+Consumer group
+---------------
+
+Step 1: create a new topic cg_topic
+kafka-topics –create --zookeeper 127.0.0.1:2181 --topic cg_topic --partitions 3  --replication-factor 1
+
+Step 2: produce the messages
+Kafka-console-producer --bootstrap-server localhost:9092 --topic cg_topic
+
+Step 3: look at the documentation
+kafka-consumer-groups
+
+Step 4: consume the messages
+kafka-consumer-groups --bootstrap-server localhost:9092 --group cg-group
+
+step 5: describe the group
+kafka-consumer-groups --bootstrap-server localhost:9092 --describe --group  cg-group
+
+
+
+Reset the messages to earliest
+--------------------------------
+
+Step 6 : reset the offsets to the beginning of each partition
+kafka-consumer-groups --bootstrap-server localhost:9092 --group cg-group
+--reset-offsets --to-earliest --execute --topic cg_topic
+
+Step 7: describe the group again
+kafka-consumer-groups --bootstrap-server localhost:9092 --describe --group
+cg-group
+
+Step 8 : consume from where the offsets have been reset
+kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic cg_topic --group cg-group
+
+Step 9: describe the group again
+kafka-consumer-groups --bootstrap-server localhost:9092 --describe --group cg-group
+
+
+Shit offsets
+------------
+
+Step 11: shift offsets by 2 (forward) as another strategy
+kafka-consumer-groups --bootstrap-server localhost:9092 --group cg-group --reset-offsets --shift-by 2 
+--execute --topic cg_topic
+
+Step 12: shift offsets by 2 (backward) as another strategy
+kafka-consumer-groups --bootstrap-server localhost:9092 --group cg-group --reset-offsets --shift-by -2 
+--execute --topic cg_topic
+
+Step 13: consume again
+kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic cg_topic --group cg-group
+
+
+three consumers from same consumer-group
+----------------------------------------
+
+Step 14 : start one consumer
+kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic cg_topic --group cg_group
+
+Step 15: start one producer and start producing
+kafka-console-producer --broker-list 127.0.0.1:9092 --topic cg_topic
+
+Step 16: start another consumer part of the same group. See messages being spread
+kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic cg_topic –group cg_group
+
+Step 17: start another consumer part of a different group from beginning
+kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic cg_topic–group cg_group --from-beginning
+
+
+display the data from topic  _consumer_offsets
+----------------------------------------------
+
+18. Kafka stores the offset consumed by each groupid on a topic by partition in a topic _consumer_offsets
+(As it is a binary data, to get details information use the below command)
+
+sh kafka-console-consumer.sh --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter"  --bootstrap-server localhost:9092 --topic __consumer_offsets --from-beginning
+
+
+

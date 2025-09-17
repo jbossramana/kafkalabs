@@ -1,0 +1,9 @@
+{"namespace": "io.confluent.examples.clients.basicavro",
+ "type": "record",
+ "name": "Order",
+ "fields": [
+     {"name": "id", "type": "string"},
+     {"name": "name", "type": "string"},
+     {"name": "region", "type": "string", "default": ""}
+ ]
+}

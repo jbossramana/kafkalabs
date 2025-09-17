@@ -1,0 +1,81 @@
+BOOTSTRAP_SERVERS_CONFIG(bootstrap.servers)
+==========================================
+
+This value is a comma separated list of host/port pairs that the Producer uses to establish
+an initial  connection to the Kafka cluster. 
+
+The producer uses of all servers in the cluster no matter which ones we list here. 
+
+This list only specifies the initial Kafka brokers used to discover the full set of servers of the Kafka cluster. 
+
+If a server in this list is down, the producer will just go to the next broker in the list to discover the 
+full topology of the Kafka cluster.
+
+CLIENT_ID_CONFIG ("client.id")
+==============================
+
+The purpose of this is to be able to track the source of requests beyond just ip/port by allowing a logical 
+application name to be included in server-side request logging. similar to bean-id in Spring.
+
+
+KEY_SERIALIZER_CLASS_CONFIG ("key.serializer")
+==============================================
+
+It is a Kafka Serializer class for Kafka record keys that implements the Kafka Serializer interface.
+
+
+VALUE_SERIALIZER_CLASS_CONFIG ("value.serializer")
+==================================================
+
+It is a Kafka Serializer class for Kafka record values that implements the Kafka Serializer interface.
+
+
+KafkaProducer send() Method
+===========================
+
+There are two forms of send method. 
+
+There is the send method with a callback and one without a callback. Both forms of the send method return a Future.
+ 
+They both asynchronously sends a record to a topic. The callback gets invoked when the broker has acknowledged the send.
+
+The send method is asynchronous and returns right away as soon as the record gets added to the send buffer. 
+
+The send method allows sending many records at once without blocking for a response from Kafka broker. 
+
+The result of send method is a RecordMetadata which contains a record’s partition, offset, and timestamp. 
+
+Invoking get() on this future will block until the associated request completes and then return the metadata 
+for the record or throw any exception that occurred while sending the record.
+
+
+The callback interface allows code to execute when the request is complete. The callback executes in a background 
+I/O thread so it should be fast (don't block it). The onCompletion(RecordMetadata metadata, Exception exception) 
+gets called when the asynchronous operation completes. The metadata gets set (not null) if the operation was a success,
+and the exception gets set (not null) if the operation had an error.
+
+
+Callbacks for records sent to the same partition are executed in the order sent.
+
+
+Q&A
+===
+
+What will happen if the first server is down in the bootstrap list? Can the producer still connect to the other
+Kafka brokers in the cluster?
+
+The producer will try to contact the next broker in the list. Any of the brokers once contacted, will let the producer
+know about the entire Kafka cluster. The Producer will connect as long as at least one of the brokers in the list 
+is running. If you have 100 brokers and two of the brokers in a list of three servers in the bootstrap list are down,
+the producer can still use the 98 remaining brokers.
+
+
+When would you use Kafka async send vs. sync send?
+
+If you were already using an async code (Akka, QBit, Reakt, Vert.x) base, and you wanted to send records quickly.
+
+
+
+
+
+

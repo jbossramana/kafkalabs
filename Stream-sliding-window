@@ -1,0 +1,84 @@
+Windowing in the context of stream processing refers to the technique of dividing an unbounded stream of data into finite, sized portions 
+called "windows", in order to perform computation on these portions of data.
+
+Windowing allows stream processing applications to analyze and summarize data over time or count-based intervals, enabling real-time 
+data analysis and decision-making.
+
+There are several types of windows that can be used in stream processing:
+
+
+1. Time-based windows: In time-based windows, the data is divided into fixed or sliding time intervals. The window is advanced based on the 
+time elapsed since the first element in the window was processed. The common examples of time-based windows are tumbling windows, 
+hopping windows, and sliding windows.
+
+
+Tumbling Windows:
+
+Tumbling windows divide the stream into non-overlapping fixed-size windows, where each event belongs to exactly one window. These windows 
+are called "tumbling" because they don't overlap and they "tumble" forward in time by a fixed duration.
+
+KStream<String, Integer> stream = ... // input stream
+TimeWindows window = TimeWindows.of(Duration.ofSeconds(5)); // define a tumbling window of 5 seconds
+KGroupedStream<String, Integer> groupedStream = stream.groupByKey();
+KTable<Windowed<String>, Long> windowedCounts = groupedStream.windowedBy(window)
+    .count();
+
+
+Hopping Windows:
+
+Hopping windows are similar to tumbling windows, but with an overlap between successive windows. The size of the window and the size of the 
+overlap are both fixed, and can be specified when defining the window.
+
+KStream<String, Integer> stream = ... // input stream
+TimeWindows window = TimeWindows.of(Duration.ofHours(1)).advanceBy(Duration.ofMinutes(15)); // define a hopping window of 5 seconds with 1-second overlap
+KGroupedStream<String, Integer> groupedStream = stream.groupByKey();
+KTable<Windowed<String>, Long> windowedCounts = groupedStream.windowedBy(window)
+    .count();
+
+By using an advance interval, the sales team can obtain insights into sales trends for specific time periods, even when data is not available 
+for every single minute or hour. For example, if the hopping window has a size of 1 hour and an advance interval of 15 minutes, the team can get 
+insights into sales trends every 15 minutes, even if there are gaps in the sales data for certain minutes or hours.
+
+
+2. Count-based windows: In count-based windows, the data is divided into fixed or sliding intervals based on the number of events. 
+The window is advanced based on the number of events that have occurred since the first element in the window was processed.
+
+Let's say we want to count the number of purchases made by customers in a store. We want to create a window that counts the number of purchases 
+made every 10 purchases. This means that once the count reaches 10, the window will be processed, and the count will start again from zero.
+
+KStream<String, Purchase> purchases = builder.stream("purchases");
+
+KTable<Windowed<String>, Long> purchaseCounts = purchases
+    .groupBy((key, purchase) -> purchase.getCustomerId())
+    .windowedBy(CountWindows.of(10))
+    .count();
+
+purchaseCounts.toStream().foreach((key, value) -> System.out.println(key.key() + " => " + value));
+
+
+3. Session windows: In session windows, the data is grouped based on the session of the user. A session is a sequence of events that 
+occur within a specified time interval, where the time between two consecutive events does not exceed a threshold value.
+
+
+Sessions Windows:
+Suppose we are processing a stream of user clicks on a website. We want to group the clicks by user session and calculate the total 
+time spent by the user on the website during each session.
+
+In this case, we can define a session window with a timeout of, say, 30 minutes. This means that if there is a gap of more than 
+30 minutes between two consecutive clicks, the clicks will be considered as belonging to different sessions.
+
+
+KStream<String, ClickEvent> clicksStream = builder.stream("clicks-topic");
+
+KTable<Windowed<String>, Long> sessionCounts = clicksStream
+    .groupByKey()
+    .windowedBy(SessionWindows.with(Duration.ofMinutes(30)))
+    .count();
+
+sessionCounts.toStream()
+    .map((windowedKey, count) -> new KeyValue<>(windowedKey.key(), count))
+    .to("session-counts-topic", Produced.with(Serdes.String(), Serdes.Long()));
+
+
+
+

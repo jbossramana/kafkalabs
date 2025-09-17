@@ -1,0 +1,126 @@
+1. Create Cluster
+2. Custom create -> kafka-3.5.1 -> zookeeper
+3. Kafka.t3.small
+4. Number of zones: 2
+5. broker - 1
+6. storage - 10gb
+7. configuration -> select default (also, show custom configuration)
+8. ap-south-2a, ap-south-2b
+9. create a security broker
+   (search for aws eks prots)
+  -> inbound rules -> custom TCP -> 9096 -> Anywhere IPv4
+  -> inbound rules -> custom TCP -> 9098 -> Anywhere IPv4 
+10. Access control methods
+    |_ I am role-based authentication
+    |_ SASL/SCRAM authentication
+11. amazon cloudwatch metrics -> basic monitoring
+12. Broker log deliery-> deliver to amazongCloudWatch logs -> create log group and associate
+13. create cluster -> it will take 15 minutes
+
+IAM Setup
+============
+-> java, iam authentication roles
+ref: aws documentation -> how-to-use-iam-access-control.html
+[copy the json file, replace the resource with cluster arn(Amazon Resource Names) otherwise use Admin role without doing this]
+
+Topic -> Allow -> Resource -> *
+Alter Group -> Allow -> Resource -> *
+
+Now select IAM
+|_ Policies -> create policy -> JSON -> Policy name -> create policy
+
+Click -> Role -> AWS Service -> EC2 -> Select the above policy name -> give name -> create role
+
+EC2 Instance
+============
+1. Launch instance -> amazon instance Linux 2023 -> Hyderabad (t3.micro)
+   |_ create a new key pair  XX[Don't select EC2 Firewall Security group]XX
+   |_ Advance settings -> IAM instance profile -> select the previous profile -> Launch instance
+
+2. Select instance -> EC2 Instance Connect -> in terminal -> sudo  su
+
+sudo yum install java-17-amazon-corretto -y
+check java -version
+
+copy kafka-3.5.1 link 
+> wget https://archive.apache.org/dist/kafka/3.6.1/kafka_2.13-3.6.1.tgz
+> tar xvzf kafka_2.13-3.6.1.tgz
+
+IAM for client
+==============
+Ref : configure clients for IAM access control
+in config folder
+|_ vi client.properties 
+note : truststore is not required, remaing properties as it is
+
+security.protocol=SASL_SSL
+sasl.mechanism=AWS_MSK_IAM
+sasl.jaas.config=software.amazon.msk.auth.iam.IAMLoginModule required;
+sasl.client.callback.handler.class=software.amazon.msk.auth.iam.IAMClientCallbackHandler
+
+
+Download aws-msk-iam-auth.jar file
+==================================
+|_ select GitHub link
+|_ aws-msk-...all.jar (copy link)
+
+cd /kafka/libs
+> wget https://github.com/aws/aws-msk-iam-auth/releases/download/v2.3.0/aws-msk-iam-auth-2.3.0-all.jar
+
+kafka topics
+------------
+sh kafka-topics.sh --create --topic simple-topic --command-config  ../config/client.properties --bootstrap-server b-2.mskdemocluster.bkk6fn.c2.kafka.ap-south-1.amazonaws.com:9098,b-1.mskdemocluster.bkk6fn.c2.kafka.ap-south-1.amazonaws.com:9098 
+
+sh kafka-console-producer.sh --topic simple-topic --producer.config  ../config/client.properties --bootstrap-server b-2.mskdemocluster.bkk6fn.c2.kafka.ap-south-1.amazonaws.com:9098,b-1.mskdemocluster.bkk6fn.c2.kafka.ap-south-1.amazonaws.com:9098 
+
+sh kafka-console-consumer.sh --topic simple-topic --consumer.config  ../config/client.properties --bootstrap-server b-2.mskdemocluster.bkk6fn.c2.kafka.ap-south-1.amazonaws.com:9098,b-1.mskdemocluster.bkk6fn.c2.kafka.ap-south-1.amazonaws.com:9098 
+
+
+note : get server list from MSK-> Cluster-> demo-> view client information
+
+sh kafka-log-dirs.sh --bootstrap-server b-1.mskdemocluster.xnsz9e.c2.kafka.ap-south-1.amazonaws.com:9098,b-2.mskdemocluster.xnsz9e.c2.kafka.ap-south-1.amazonaws.com:9098 --describe --topic-list simple-topic
+
+
+
+IAM Policy json file:
+=====================
+
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kafka-cluster:Connect",
+        "kafka-cluster:AlterCluster",
+        "kafka-cluster:DescribeCluster"
+      ],
+      "Resource": [
+        "arn:aws:kafka:ap-south-1:361769576354:cluster/MSKDemoCluster/9f457d40-090a-4406-a2a1-78e517f866be-2"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kafka-cluster:*Topic*",
+        "kafka-cluster:WriteData",
+        "kafka-cluster:ReadData"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kafka-cluster:AlterGroup",
+        "kafka-cluster:DescribeGroup"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+

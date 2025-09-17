@@ -1,0 +1,260 @@
+
+Aggregation
+
+The aggregation operation is applied to records of the same key. Kafka Streams supports the following aggregations: aggregate, count, and reduce.
+We can run groupBy (or its variations) on a KStream or a KTable, which results in a KGroupedStream and KGroupedTable, respectively.
+
+aggregate
+The aggregate function has two key components: Initializer andAggregator. When the first record is received, the Initializer is invoked and used as a 
+starting point for the Aggregator. For subsequent records, the Aggregator uses the current record along with the computed aggregate (until now) for its
+calculation. Conceptually, this is a stateful computation being performed on an infinite data set. It is stateful because calculating the current state 
+takes into account the current state (the key-value record) along with the latest state (current aggregate). This can be used for scenarios such as 
+moving average, sum, count, etc.
+
+
+
+
+Example 1:
+
+Count.java
+----------
+
+public class Count {
+
+    private String key;
+    private Integer count;
+
+    public Count(String key, Integer count) {
+        this.key = key;
+        this.count = count;
+    }
+
+    public String getKey() {
+        return this.key;
+    }
+
+    public Integer getCount() {
+        return this.count;
+    }
+   
+}
+
+
+
+KeyCountSerde.java
+------------------
+
+import java.util.Map;
+
+import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.Serde;
+import org.apache.kafka.common.serialization.Serializer;
+
+public class KeyCountSerde implements Serde<Count>  {
+
+    @Override
+    public Serializer<Count> serializer() {
+        return new Serializer<Count>() {
+            @Override
+            public byte[] serialize(String string, Count kc) {
+                String s = kc.getKey() + "," + kc.getCount();
+                return s.getBytes();
+            }
+
+			@Override
+			public void configure(Map<String, ?> configs, boolean isKey) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void close() {
+				// TODO Auto-generated method stub
+				
+			}
+        };
+    }
+
+    @Override
+    public Deserializer<Count> deserializer() {
+        return new Deserializer<Count>() {
+            @Override
+            public Count deserialize(String string, byte[] bytes) {
+                String s = new String(bytes);
+                return new Count(s.split(",")[0], Integer.parseInt(s.split(",")[1]));
+            }
+
+			@Override
+			public void configure(Map<String, ?> configs, boolean isKey) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void close() {
+				// TODO Auto-generated method stub
+				
+			}
+        };
+    }
+
+	@Override
+	public void configure(Map<String, ?> configs, boolean isKey) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void close() {
+		// TODO Auto-generated method stub
+		
+	}
+
+}
+
+
+
+StreamAggregation.java
+----------------------
+
+
+import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
+import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.KeyValue;
+import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.kstream.Aggregator;
+import org.apache.kafka.streams.kstream.Initializer;
+import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.KTable;
+import org.apache.kafka.streams.kstream.Materialized;
+import org.apache.kafka.streams.kstream.Produced;
+
+
+public class StreamAggregation {
+
+	 static String INPUT_TOPIC = "input";
+	    static String OUTPUT_TOPIC = "output";
+	    static final String APP_ID = "testapp";
+
+	    public static void main(String[] args) throws InterruptedException {
+	        Properties config = new Properties();
+	        config.setProperty(StreamsConfig.APPLICATION_ID_CONFIG, APP_ID);
+	        config.setProperty(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+	        config.setProperty(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
+	        config.setProperty(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
+
+	        Topology topology = streamAggregation();
+
+	        KafkaStreams ks = new KafkaStreams(topology, config);
+	        ks.start();
+
+	        new CountDownLatch(1).await();
+	    }
+
+	    static Topology streamAggregation() {
+	        StreamsBuilder builder = new StreamsBuilder();
+
+	        KStream<String, String> stream = builder.stream(INPUT_TOPIC);
+
+	        KTable<String, Count> aggregate = stream.groupByKey().aggregate(new Initializer<Count>() {
+	            @Override
+	            public Count apply() {
+	                return new Count("", 0);
+	            }
+	        }, new Aggregator<String, String, Count>() {
+	            @Override
+	            public Count apply(String k, String v, Count aggKeyCount) {
+	                Integer currentCount = aggKeyCount.getCount();
+	                return new Count(k, currentCount + 1);
+	            }
+	        }, Materialized.with(Serdes.String(), new KeyCountSerde()));
+
+	        aggregate.toStream().map((k, v) -> new KeyValue<>(k, v.getCount())).to(OUTPUT_TOPIC,
+	                Produced.with(Serdes.String(), Serdes.Integer()));
+	        return builder.build();
+	    }
+	    
+}
+
+
+
+
+Readme Instructions
+--------------------
+
+./kafka-console-producer --bootstrap-server localhost:9092 --topic input --property  "parse.key=true" --property "key.separator=,"
+
+
+./kafka-console-consumer --bootstrap-server localhost:9092 \
+    --topic output  --from-beginning \
+    --formatter kafka.tools.DefaultMessageFormatter \
+    --property print.key=true  --property print.value=true \
+    --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer \
+    --property value.deserializer=org.apache.kafka.common.serialization.IntegerDeserializer
+    
+    
+    
+    
+    
+count
+count is such a commonly used form of aggregation that it is offered as a first-class operation. Once you have the stream records grouped by key (KGroupedStream), 
+we can count the number of records of a specific key by using this operation.
+
+The aggregate way of doing things can be replaced by a single method call!
+
+
+StreamsBuilder builder = new StreamsBuilder();
+KStream<String, String> stream = builder.stream(INPUT_TOPIC);
+stream.groupByKey().count();
+
+
+
+reduce
+You can use reduce to combine the stream of values. The aggregateoperation that was covered earlier is a generalized form of reduce. You can implement 
+functionality such as sum, min, max, etc. Here is an example of max:
+
+
+StreamsBuilder builder = new StreamsBuilder();
+KStream<String, Long> stream = builder.stream(INPUT_TOPIC, Consumed.with(Serdes.String(), Serdes.Long()));
+stream.groupByKey()
+      .reduce(new Reducer<Long>() {
+                @Override
+                 public Long apply(Long currentMax, Long v) {
+                    Long max = (currentMax > v) ? currentMax : v;
+                        return max;
+                    }
+                })
+      .toStream().to(OUTPUT_TOPIC);
+return builder.build();
+
+
+
+
+
+Aggregation and state stores
+
+In the examples above, the aggregated values were pushed to an output topic. This is not mandatory, though. It is possible to store the aggregation
+results in local state stores. Here is an example:
+
+StreamsBuilder builder = new StreamsBuilder();
+KStream<String, String> stream = builder.stream(INPUT_TOPIC);
+stream.groupByKey().count(Materialized.as("count-store"));
+
+In this example, the call to count also creates a local state store named count-store that can then be introspected using Interactive Queries.
+
+These state stores can either be in memory or stored on disk using RocksDB.
+
+This allows for scalability since each state store is present locally in the specific Kafka Streams application that processes inputs from different 
+partitions of a topic. Thus, the overall state is distributed across (potential) multiple instances of your application (except in the case of GlobalKTables). 
+Another key property is high availabilitybecause the contents of these state stores are backed up into Kafka as changelog aka compacted topics (although this 
+can be disabled), which provides high availability. If an app instance crashes, its state store contents can be restored from Kafka itself.
+
+
+
+
+
+    

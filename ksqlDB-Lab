@@ -1,0 +1,203 @@
+ksqlDB is a new kind of database purpose-built for stream processing apps, allowing users to build stream processing 
+applications against data in Apache Kafka® and enhancing developer productivity.
+
+ksqlDB can be described as a real-time event-streaming database built on top of Apache Kafka and Kafka Streams. 
+It combines powerful stream processing with a relational database model using SQL syntax.
+
+ksqlDB is an event streaming database, streams and tables are its core abstractions. Essentially, these are collections of 
+data that can be transformed and processed in real-time.
+
+Creating a New Stream
+=====================
+
+CREATE STREAM readings (
+    sensor VARCHAR KEY,
+    location VARCHAR,
+    reading INT
+) WITH (
+    kafka_topic = 'readings',
+    partitions = 3,
+    value_format = 'json'
+);
+
+
+
+Inserting Rows into a Stream
+============================
+
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-1', 'wheel', 45);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-2', 'motor', 41);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-1', 'wheel', 42);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-3', 'muffler', 42);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-3', 'muffler', 40);
+
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-4', 'motor', 43);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-6', 'muffler', 43);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-5', 'wheel', 41);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-5', 'wheel', 42);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-4', 'motor', 41);
+
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-7', 'muffler', 43);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-8', 'wheel', 40);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-9', 'motor', 40);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-9', 'motor', 44);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-7', 'muffler', 41);
+
+
+Transforming an Event Stream
+============================
+
+This persistent query transforms one stream (readings, above) into a new one called clean that has modified 
+text to upper case in one field.
+
+CREATE STREAM clean AS
+SELECT sensor,
+reading,
+UCASE(location) AS location
+FROM readings
+EMIT CHANGES;
+
+
+Filtering Rows out of a Stream
+==============================
+
+CREATE STREAM high_readings AS
+    SELECT sensor, reading, location
+    FROM clean
+    WHERE reading > 41
+    EMIT CHANGES;
+    
+
+Combining Stream Operations into One
+====================================
+
+To simplify what we’ve created, we must get rid of streams we do not need.
+
+CREATE STREAM high_pri AS
+    SELECT sensor,
+           reading,
+           UCASE(location) AS location
+    FROM readings
+    WHERE reading > 41
+    EMIT CHANGES;
+    
+We can bypass the multiple streams by combining operations into a single new stream with more SQL.
+
+
+Push Query
+==========
+
+This type of query pushes a continuous stream of updates to the client. These queries are particularly suitable for 
+asynchronous application flows as they enable the clients to react to new information in real-time.
+
+However, unlike persistent queries, the server does not store the results of such queries in a Kafka topic.
+
+SELECT * FROM clean  WHERE reading > 41 EMIT CHANGES;
+
+
+
+Client Code
+============
+
+Add the dependency for the client:
+
+<dependency>
+    <groupId>io.confluent.ksql</groupId>
+    <artifactId>ksqldb-api-client</artifactId>
+    <version>6.2.0</version>
+</dependency>
+
+
+An instance of the Client with ksqlDB server connection details and use this to execute our SQL statement:
+
+ClientOptions options = ClientOptions.create()
+  .setHost(KSQLDB_SERVER_HOST)
+  .setPort(KSQLDB_SERVER_PORT);
+
+Client client = Client.create(options);
+
+Map<String, Object> properties = Collections.singletonMap(
+  "auto.offset.reset", "earliest"
+);
+
+CompletableFuture<ExecuteStatementResult> result = 
+  client.executeStatement(CREATE_READINGS_STREAM, properties);
+
+Inserting Sample Data
+=====================
+
+List<KsqlObject> rows = Arrays.asList(
+  new KsqlObject().put("sensor_id", "sensor-1")
+    .put("timestamp", "2021-08-01 09:00:00").put("reading", 22),
+  new KsqlObject().put("sensor_id", "sensor-1")
+    .put("timestamp", "2021-08-01 09:10:00").put("reading", 20),
+  new KsqlObject().put("sensor_id", "sensor-2")
+    .put("timestamp", "2021-08-01 10:00:00").put("reading", 26),
+  
+  // additional rows
+);
+
+CompletableFuture<Void> result = CompletableFuture.allOf(
+  rows.stream()
+    .map(row -> client.insertInto(READINGS_TABLE, row))
+    .toArray(CompletableFuture[]::new)
+);
+
+
+Push Query
+==========
+
+String ALERTS_QUERY = "SELECT * FROM alerts EMIT CHANGES";
+
+public CompletableFuture<Void> subscribeOnAlerts(Subscriber<Row> subscriber) {
+    return client.streamQuery(ALERTS_QUERY, PROPERTIES)
+      .thenAccept(streamedQueryResult -> streamedQueryResult.subscribe(subscriber))
+      .whenComplete((result, ex) -> {
+          if (ex != null) {
+              log.error("Alerts push query failed", ex);
+          }
+      });
+}
+
+
+Pull Query
+==========
+
+pull queries are well suited to synchronous request/response application flows.
+
+Create a query to retrieve all the alerts triggered for a particular sensor id:
+
+String pullQuery = "SELECT * FROM alerts WHERE sensor_id = 'sensor-2';";
+
+List<Row> rows = client.executeQuery(pullQuery, PROPERTIES).get()
+
+
+Creating the Materialized View using TABLE
+===========================================
+
+We can derive a new alerts table from the readings stream. This persistent query (or materialized view) runs on the server 
+indefinitely  and processes events from the source stream or table.
+
+The below statment should raise an alert when the average reading, per sensor, exceeds a value of 25 over a 30-minute period:
+
+CREATE TABLE alerts AS
+  SELECT
+    sensor_id,
+    TIMESTAMPTOSTRING(WINDOWSTART, 'yyyy-MM-dd HH:mm:ss', 'UTC') 
+      AS start_period,
+    TIMESTAMPTOSTRING(WINDOWEND, 'yyyy-MM-dd HH:mm:ss', 'UTC') 
+      AS end_period,
+    AVG(reading) AS average_reading
+  FROM readings
+  WINDOW TUMBLING (SIZE 30 MINUTES)
+  GROUP BY id 
+  HAVING AVG(reading) > 25
+  EMIT CHANGES;
+  
+We're aggregating new incoming events in a tumbling window of 30 minutes, per sensor. We've also used the TIMESTAMPTOSTRING function to 
+convert the UNIX timestamp into something more readable.
+
+Importantly, the materialized view only updates with data when the new event successfully integrates with the aggregation function.
+
+
+

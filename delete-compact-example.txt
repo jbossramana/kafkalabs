@@ -1,0 +1,41 @@
+segment.ms  -> 7 days
+segment.bytes ->  1gb
+
+log.retention.hours = 168 (7days) -> -1
+
+
+log.cleanup.policy [compact, delete] -> default : delete
+
+log.cleanup.policy = delete [insertion]
+ex1: [transaction]
+key     value
+10001   initial-deposit(5000)
+10001   tx1-deposit (2000)
+10002   tx1-withdraw
+10003   tx1-deposit
+10003   tx2-deposit
+10001   tx2-withdraw (-2000)
+10002   tx2-deposit
+
+
+log.cleanup.policy = compact [upsertion]
+ex3: [balance]
+key     value
+1001    5000
+1001    7000
+1001    5000
+
+log.cleanup.policy = compact [upsertion]
+ex3:
+key     value
+(name)  (age)
+ramana    35
+Surya     25
+Aditya    30
+ramana    50
+...
+..
+ramana    53
+Surya     27
+Aditya    25
+

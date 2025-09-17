@@ -1,0 +1,37 @@
+
+1). Create the Topic with two partitions.
+
+./kafka-topics --bootstrap-server localhost:9092  --create --topic TestTopic --partitions 2 --replication-factor 1
+
+2).  Start the producer in one terminal. 
+
+3).  Start a consumer in another terminal.
+
+We can observe the output messages. It shows that the consumer has got both 
+the partitions. Partition 0 and partition 1. This one is the only consumer, so it 
+should read both the partitions.
+
+4). Now start another consumer.
+
+What should happen? Following activities will take place.
+
+A rebalance will be triggered. Because we have a new consumer and it should 
+have some partition to read.
+
+Kafka will revoke all partitions from the first consumer because the list of consumers
+in a group is modified.
+
+Then, both consumers will get new partition assignment, and each of them should 
+get one partition. So, let's start the second consumer in a new terminal.
+
+Observe the output messages. We must notice that Kafka revoked both the partitions.
+But, before losing them, we committed both the partitions. The rebalance listener has taken
+care of the commit. 
+
+We should also observe that both the consumers have got new partition assignment.
+
+5). Kill one of those consumers, what will happen? 
+
+Another rebalance activity will be triggered, and Kafka will assign both the partitions
+to the surviving consumer. 
+

@@ -1,0 +1,22 @@
+public class ConsumerRecord<K,V>
+extends java.lang.Object
+
+A key/value pair to be received from Kafka. This also consists of a topic name and a partition number from which 
+the record is being received, an offset that points to the record in a Kafka partition, and a timestamp as marked 
+by the corresponding ProducerRecord.
+
+
+
+public ConsumerRecords<K,V> poll​(java.time.Duration timeout)
+============================================================
+
+Fetch data for the topics or partitions specified using one of the subscribe/assign APIs. It is an error to not 
+have subscribed to any topics or partitions before polling for data.
+
+On each poll, consumer will try to use the last consumed offset as the starting offset and fetch sequentially. 
+The last consumed offset can be manually set through seek(TopicPartition, long) or automatically set as the last 
+committed offset for the subscribed list of partitions
+
+This method returns immediately if there are records available. Otherwise, it will await the passed timeout. 
+If the timeout expires, an empty record set will be returned
+

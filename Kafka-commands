@@ -1,0 +1,60 @@
+To start Zookeeper:
+kafka/bin/windows> zookeeper-server-start.bat ../../config/zookeeper.properties
+sh zookeeper-server-start.sh ../config/zookeeper.properties
+
+To start Kafka:
+kafka/bin/windows> kafka-server-start.bat ../../config/server.properties
+sh kafka-server-start.sh  ../config/server.properties
+
+To create a topic:
+kafka/bin/windows> kafka-topics.bat --bootstrap-server localhost:9092 --create --topic first-topic --partitions 1 --replication-factor 1
+sh kafka-topics.sh --bootstrap-server localhost:9092 --create --topic first-topic --partitions 1 --replication-factor 1
+
+To describe a topic
+
+sh kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic first-topic
+
+To run a console producer
+sh kafka-console-producer.sh --bootstrap-server localhost:9092 --topic first-topic
+
+To run a console consumer
+sh kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic first-topic --from-beginning
+
+To display the logs in readable format
+sh kafka-run-class.sh kafka.tools.DumpLogSegments --deep-iteration --print-data-log --files  /tmp/kafka-logs/test-topic-0/00000000000000000000.log
+
+To display the log end offset for each partition  [kafka.tools.GetOffsetShell class deprecated in confluent 7.9.2 version, use AdminClient code]
+
+sh kafka-run-class.sh kafka.tools.GetOffsetShell --bootstrap-server localhost:9092 --topic test-topic
+
+Describe the group
+
+sh kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group tg1
+
+To reset the offsets to the beginning of each partition
+
+sh kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group tg3  --reset-offsets --to-earliest --execute --topic test-topic
+
+
+Check offset for given timestamp  [kafka.tools.GetOffsetShell class deprecated in confluent 7.9.2 version, use AdminClient code]
+
+sh kafka-run-class.sh  kafka.tools.GetOffsetShell --bootstrap-server localhost:9092 --topic test-topic --time 1709548873002
+
+add a config to the existing topic
+sh kafka-configs.sh --bootstrap-server localhost:9092 --entity-type topics --entity-name cluster-topic --add-config min.insync.replicas=3 --alter
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

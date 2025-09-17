@@ -1,0 +1,65 @@
+Common REST Examples
+--------------------
+
+
+List the connector plugins available on this worker
+
+$ curl localhost:8083/connector-plugins | jq
+
+
+Listing active connectors on a worker
+
+$ curl localhost:8083/connectors
+
+
+Restarting a connector
+
+$ curl -X POST localhost:8083/connectors/local-file-sink/restart
+
+
+Getting tasks for a connector
+
+$ curl localhost:8083/connectors/local-file-sink/tasks | jq
+
+
+Restarting a task
+
+$ curl -X POST localhost:8083/connectors/local-file-sink/tasks/0/restart
+
+
+Pausing a connector (useful if downtime is needed for the system the connector interacts with)
+
+$ curl -X PUT localhost:8083/connectors/local-file-sink/pause
+
+
+Resuming a connector
+
+$ curl -X PUT localhost:8083/connectors/local-file-sink/resume
+
+
+Updating connector configuration
+
+$ curl -X PUT -H "Content-Type: application/json" --data '{"connector.class":"FileStreamSinkConnector","file":"test.sink.txt","tasks.max":"2","topics":"connect-test","name":"local-file-sink"}' localhost:8083/connectors/local-file-sink/config
+
+
+Getting connector status
+
+$ curl localhost:8083/connectors/local-file-sink/status | jq
+
+
+Getting connector configuration
+
+$ curl localhost:8083/connectors/local-file-sink | jq
+
+
+
+Deleting a connector
+
+$ curl -X DELETE localhost:8083/connectors/local-file-sink
+(no response printed if success)
+
+
+
+
+
+

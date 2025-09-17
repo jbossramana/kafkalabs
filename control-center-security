@@ -1,0 +1,24 @@
+1. add the below properties in control-center-dev.properties
+
+confluent.controlcenter.rest.authentication.method=BASIC
+confluent.controlcenter.rest.authentication.realm=c3
+confluent.controlcenter.rest.authentication.roles=Administrators,Restricted
+confluent.controlcenter.auth.restricted.roles=Restricted
+confluent.controlcenter.auth.session.expiration.ms=600000
+
+
+2. create the below files in confluent/bin directory
+
+propertyfile.jaas
+c3 {
+    org.eclipse.jetty.jaas.spi.PropertyFileLoginModule required
+    file="password.properties";
+};
+
+
+password.properties
+ramana:ramana,Administrators
+
+3. from terminal run the below command:
+CONTROL_CENTER_OPTS="-Djava.security.auth.login.config=propertyfile.jaas" ./confluent local services control-center start 
+

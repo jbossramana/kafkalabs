@@ -1,0 +1,26 @@
+auto.create.topics.enable
+log.retention.hours
+min.insync.replicas
+unclean.leader.election.enable 
+replica.lag.time.max.ms 
+auto.leader.rebalance.enable=true [kafka-preferred-replica-election]
+broker.rack=my-rack-id [availability zones in EC2]
+
+> replica.fetch.max.bytes [default :  1M]
+The number of bytes of messages to attempt to fetch for each partition
+
+
+ZooKeeper ensembles (serving clusters) are made up of one or more servers which "vote" on each change. 
+A majority of the original servers are required to "approve" any change before it's accepted.
+
+
+Say you have 3 servers (f=1) in the ensemble, if one fails the service is still up (2 is a majority). However if a 
+second server fails the service would be down.
+
+
+
+replica.lag.time.max.ms  (default 30sec)
+If a follower hasn't sent any fetch requests or hasn't consumed up to the leaders log end offset for at least this time, 
+the leader will remove the follower from isr
+
+
