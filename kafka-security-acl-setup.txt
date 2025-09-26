@@ -90,10 +90,11 @@ sh kafka-server-start.sh ../config/server.properties
 
 6. run the below commands
 
-sh kafka-topics.sh --bootstrap-server localhost:9093   --command-config client-ssl-auth.properties --create --topic acltest
-
 sh kafka-acls.sh --bootstrap-server localhost:9093 --command-config client-ssl-auth.properties --add --allow-principal \
 User:CN=acladmin,OU=kafka,O=kafka,L=kafka,ST=kafka,C=XX  --operation Create --topic acltest
+
+sh kafka-topics.sh --bootstrap-server localhost:9093   --command-config client-ssl-auth.properties --create --topic acltest
+
 
 sh kafka-acls.sh --bootstrap-server localhost:9093  --add  --allow-principal  User:CN=acladmin,OU=kafka,O=kafka,L=kafka,ST=kafka,C=XX \
 --consumer --topic acltest --group acl-consumer --command-config client-ssl-auth.properties
