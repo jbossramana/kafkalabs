@@ -127,6 +127,82 @@ However, unlike persistent queries, the server does not store the results of suc
 SELECT * FROM clean  WHERE reading > 41 EMIT CHANGES;
 
 
+ksqlDB CRUD Example with Queryable Table
+=======================================
+
+Step 1: Create the Source Stream (Source of "Create" and "Update")
+
+First, we define a Stream which represents the raw, immutable log of all changes (inserts and updates) to our users data. 
+We use a key column which is vital for Table state.
+
+SET 'auto.offset.reset' = 'earliest';
+
+CREATE STREAM USER_EVENTS (
+    user_id BIGINT KEY,
+    username VARCHAR,
+    email VARCHAR,
+    action_type VARCHAR -- We'll use this for a more controlled DELETE later
+) WITH (
+    KAFKA_TOPIC = 'user_events_topic',
+    VALUE_FORMAT = 'JSON',
+    PARTITIONS = 1
+);
+
+
+Step 2: Insert Data (The "Create" Operation)
+
+We insert initial records into the Stream. Since the Table doesn't exist yet, these are just events in the log.
+
+INSERT INTO USER_EVENTS (user_id, username, email, action_type) 
+VALUES (101, 'Alice', 'alice@example.com', 'INSERT');
+
+INSERT INTO USER_EVENTS (user_id, username, email, action_type) 
+VALUES (102, 'Bob', 'bob@example.com', 'INSERT');
+
+
+Step 3: Create the Queryable Table (Materialized View)
+
+This step creates the materialized view (the Table) that correctly maintains the latest state from the Stream. 
+This structure is what allows for real-time querying.
+
+CREATE TABLE USERS_LATEST_STATE AS
+    SELECT
+        user_id,
+        LATEST_BY_OFFSET(username) AS username,
+        LATEST_BY_OFFSET(email) AS email,
+        LATEST_BY_OFFSET(action_type) AS action_type
+    FROM
+        USER_EVENTS 
+    GROUP BY
+        user_id
+    HAVING LATEST_BY_OFFSET(action_type) != 'DELETE' -- Exclude logically deleted records
+    EMIT CHANGES;
+
+Step 4: Update and Read (The "Update" and "Read" Operations)
+
+An update is simply achieved by inserting a new record into the original Stream with the same key (user_id).
+
+INSERT INTO USER_EVENTS (user_id, username, email, action_type)
+VALUES (101, 'Alice', 'alice.new@example.com', 'UPDATE');
+
+We query the continuously updated Table (USERS_LATEST_STATE).
+SELECT * FROM USERS_LATEST_STATE WHERE user_id = 101;
+
+
+Step 5: Delete (The "Delete" Operation)
+
+In ksqlDB, a soft or logical delete is often used, where you mark a record for deletion. For a hard (tombstone) delete, 
+you need the special KAFKA value format.
+
+INSERT INTO USER_EVENTS (user_id, action_type)  VALUES (102, 'DELETE');
+
+
+Since the USERS_LATEST_STATE query has a HAVING LATEST_BY_OFFSET(action_type) != 'DELETE' clause, Bob's record will be filtered out.
+
+SELECT * FROM USERS_LATEST_STATE WHERE user_id = 102;
+
+
+
 
 To access the quries in java code:
 
