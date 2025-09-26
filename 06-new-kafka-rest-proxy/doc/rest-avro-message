@@ -7,8 +7,7 @@ Produce and Consume Avro Messages
 # before storing the data in Kafka
 
 1).  
-curl -X POST -H "Content-Type: application/vnd.kafka.avro.v2+json" \
--H "Accept: application/vnd.kafka.v2+json" \
+curl -X POST -H "Content-Type: application/vnd.kafka.avro.v2+json" -H "Accept: application/vnd.kafka.v2+json" \
 --data '{"value_schema": "{\"type\": \"record\", \"name\": \"User\", \"fields\": [{\"name\": \"name\", \"type\": \"string\"}]}", "records": [{"value": {"name": "testUser"}}]}' \
 "http://localhost:8082/topics/avrotest"
 
@@ -52,8 +51,7 @@ output:
 
 6). Second version of Avro 
 
-curl -X POST -H "Content-Type: application/vnd.kafka.avro.v2+json" \
--H "Accept: application/vnd.kafka.v2+json" \
+curl -X POST -H "Content-Type: application/vnd.kafka.avro.v2+json" -H "Accept: application/vnd.kafka.v2+json" \
 --data '{"value_schema": "{\"type\": \"record\", \"name\": \"User\", \"fields\": [{\"name\": \"name\", \"type\": \"string\"}, {\"name\": \"phone\", \"type\": \"string\", \"default\": \"1234567890\"}]}", "records": 
 [{"value": {"name": "testUser2","phone": "1234567890"}}]}' "http://localhost:8082/topics/avrotest"
 
