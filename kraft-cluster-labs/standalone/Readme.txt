@@ -4,14 +4,17 @@ You need a unique Cluster ID for your KRaft cluster. The shell script has a Wind
 batch equivalent.
 
 > kafka-storage.bat random-uuid
+> sh kafka-storage.sh random-uuid
 
 2. Format Log Directories (Initialize Storage)
 
-> kafka-storage.bat format --standalone -t  u4u8EfwBTqCxvUWs8jn6Tg  -c ..\..\config\server.properties
+> kafka-storage.bat format --standalone -t  RbAlYXw4SvmpDbp3ZWivVA  -c ..\..\config\server.properties
+> sh kafka-storage.sh format --standalone -t  zSUcp7bnTKa9-SVZ_WpyZQ  -c ../config/server.properties
 
 3.  Start the server
 
 > kafka-server-start.bat ..\..\config\server.properties
+> sh kafka-server-start.sh  ../config/server.properties
 
 3. Create a topic
 
