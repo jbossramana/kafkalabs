@@ -1,0 +1,50 @@
+In Kafka Streams, the groupBy method groups the stream records based on the key and returns a KGroupedStream. It is similar to the groupBy 
+operation in SQL or in other data processing systems.
+
+On the other hand, the reduce method applies a given reduction function to the values of each key in the stream and returns a new stream. 
+The reduction function must be associative and commutative, so that it can be applied to the values in any order and yield the same result. 
+The reduce operation is typically used for aggregating or summarizing data based on a key, and it can be useful for computing running aggregates 
+over time.
+
+Therefore, the key difference between groupBy and reduce is that groupBy simply groups the records based on the key, while reduce applies a 
+reduction operation to the values associated with each key.
+
+
+Let's take an example to explain the difference between reduce and groupByKey operations in Kafka Streams.
+
+Consider the following data in a Kafka topic:'
+
+Key    Value
+A      10
+B      20
+C      15
+A      30
+B      25
+
+
+Let's say we want to compute the sum of values for each key using Kafka Streams.
+
+With groupByKey operation, we will group the data by the key and then apply an aggregation operation like sum to compute the total value for each key. The result will be a KTable with the key and the corresponding total value.
+
+So, if we use groupByKey and then reduce to compute the sum of values for each key, the output will be:
+
+
+Key    Total Value
+A      40
+B      45
+C      15
+
+
+With reduce operation, we will combine the values for each key using a provided reducer function. The result will be a KTable with the key and the corresponding reduced value.
+
+So, if we use reduce directly to compute the sum of values for each key, the output will be:
+
+Key    Reduced Value
+A      40
+B      45
+C      15
+
+
+As you can see, the outputs are the same, but the intermediate results are different. With groupByKey, we create a KTable where each record represents 
+a key and the total value for that key, while with reduce, we create a KTable where each record represents a key and 
+the reduced value for that key.

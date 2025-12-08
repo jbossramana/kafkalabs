@@ -1,0 +1,78 @@
+Use consumer.seek(TopicPartition, long) to specify. E.g. consumer.seekToBeginning(Collecion) 
+and  consumer.seekToEnd(Collection) 
+
+Use Case Time-sensitive record processing: Skip to most recent records. 
+
+Use Case Bug Fix: Reset position before bug fix and replay log from there. 
+
+Use Case Restore State for Restart or Recovery: Consumer initialize position on start-up to whatever is 
+contained in local store and replay missed parts (cache warm-up or replacement in case of failure assumes 
+Kafka retains sufficient history or you are using log compaction).
+
+
+Managing Offsets
+================
+
+For the consumer to manage its own offset you just need to do the following: 
+Set enable.auto.commit = false 
+
+Use offset provided with each ConsumerRecord to save your position (partition/offset) 
+On restart restore consumer
+
+position using kafkaConsumer.seek(TopicPartition, long) Usage like this simplest when 
+the partition assignment  is also done manually using assign() instead of subscribe().
+
+
+Partition Reassignment
+----------------------
+
+Consumer partition reassignment in a consumer group happens automatically.
+
+Consumers are notified via ***ConsumerRebalanceListener*** and triggers consumers to 
+finish necessary clean up.
+
+If the consumer crashes or is shutdown, its partitions will be re-assigned to another member,
+which will begin consumption from the last committed offset of each partition. If the 
+consumer crashes before any offset has been  committed, then the consumer which takes over 
+its partitions will use the reset policy.
+
+Note : A Consumer can use the API to assign specific partitions using the ***assign***
+(Collection) method, but using `assign` disables dynamic partition assignment and consumer
+group coordination.
+
+Auto offset reset config
+========================
+
+ConsumerConfig.AUTO_OFFSET_RESET_CONFIG = "auto.offset.reset"
+
+Valid values: "latest", "earliest", "none"
+
+    latest: automatically reset the offset to the latest offset
+    earliest: automatically reset the offset to the earliest offset
+    none: throw an exception to the consumer if no previous offset is found for the consumer's group 
+    anything else: throw exception to the consumer.
+
+LAB:
+
+1.  RUN Consumer  with moving to start of log
+2.  RUN Producer
+3.  RUN Consumer run with moving to end of log
+4.  RUN Consumer run with moving to a certain location in log
+
+
+
+Note:
+Why is Kafka consumer ignoring my “earliest” directive in the auto.offset.reset parameter?
+
+It's because auto.offset.reset is only applied if there are no committed offsets for the group..
+
+When there is no initial offset in Kafka or if the current offset does not exist any more on the server,
+then use this parameter to decide.
+
+However, if we want to restart from the beginning, then use either:
+
+use a new group name
+
+explicitly move the position of the consumer to the start of the partition using seekToBeginning(): 
+
+

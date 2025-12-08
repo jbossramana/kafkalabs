@@ -1,0 +1,27 @@
+Broker Configs for the update mode:
+
+read-only: Requires a broker restart for update
+per-broker: May be updated dynamically for each broker
+cluster-wide: May be updated dynamically as a cluster-wide default.
+
+
+1. Describe the kafka-configs
+kafka-configs.bat --bootstrap-server localhost:9092  --entity-type topics --entity-name first-topic --describe
+
+2. add a config to the existing topic
+kafka-configs.bat --bootstrap-server localhost:9092 --entity-type topics --entity-name first-topic --add-config min.insync.replicas=2 --alter
+
+3.Delete the config (min.insync.replicas)
+kafka-configs.bat --bootstrap-server localhost:9092 --entity-type topics --entity-name first-topic --delete-config min.insync.replicas=2 --alter
+
+4. To alter the current broker configs for broker id 0
+kafka-configs.bat --bootstrap-server localhost:9092 --entity-type brokers --entity-name 0 --alter --add-config log.cleaner.threads=2
+
+5. Some configs may be configured as a cluster-wide default to maintain consistent values across the whole cluster.
+kafka-configs.bat --bootstrap-server localhost:9092 --entity-type brokers --entity-default --alter --add-config log.cleaner.threads=2
+
+6. To describe the currently configured dynamic cluster-wide default configs:
+kafka-configs --bootstrap-server localhost:9092 --entity-type brokers --entity-default --describe
+
+
+

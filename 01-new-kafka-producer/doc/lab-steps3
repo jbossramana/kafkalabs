@@ -1,0 +1,69 @@
+kafka-configs
+-------------
+
+1. Describe a topic
+
+kafka-topics --zookeeper localhost:2181 --describe --topic test_topic
+
+2. Configuration changes for a topic
+
+kafka-configs
+
+3. Describe the kafka-configs
+
+kafka-configs --zookeeper localhost:2181 --entity-type topics --entity-name test_topic --describe
+
+
+4. add a config
+ 
+kafka-configs --zookeeper localhost:2181 --entity-type topics --entity-name test_topic
+    --add-config min.insync.replicas=2 --alter
+    
+5. Now describe the kafka-configs
+
+kafka-configs --zookeeper localhost:2181 --entity-type topics --entity-name test_topic --describe
+
+6. Now describe the topic
+
+kafka-topics --zookeeper localhost:2181 --describe --topic test_topic
+
+Note : observe the configs: min.insync.replicas=2
+
+7. Now delete the config (min.insync.replicas)
+
+kafka-configs --zookeeper localhost:2181 --entity-type topics --entity-name test_topic
+  --delete-config min.insync.replicas=2 --alter
+
+8. Onceagain, describe the kafka-configs
+
+kafka-configs --zookeeper localhost:2181 --entity-type topics --entity-name test_topic --describe
+
+
+Updating Broker Configs
+-----------------------
+
+9. To describe the current dynamic broker configs for broker id 0:
+
+kafka-configs --bootstrap-server localhost:9092 --entity-type brokers --entity-name 0 --describe
+
+10. To alter the current broker configs for broker id 0
+
+kafka-configs --bootstrap-server localhost:9092 --entity-type brokers --entity-name 0 
+   --alter --add-config log.cleaner.threads=2
+   
+11. Once again, describe the configs
+
+kafka-configs --bootstrap-server localhost:9092 --entity-type brokers --entity-name 0 --describe
+
+12. Some configs may be configured as a cluster-wide default to maintain consistent values across the whole cluster.
+
+kafka-configs --bootstrap-server localhost:9092 --entity-type brokers --entity-default 
+  --alter --add-config log.cleaner.threads=2
+
+13. To describe the currently configured dynamic cluster-wide default configs:
+
+kafka-configs --bootstrap-server localhost:9092 --entity-type brokers --entity-default --describe
+
+
+
+

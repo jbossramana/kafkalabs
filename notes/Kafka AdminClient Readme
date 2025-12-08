@@ -1,0 +1,121 @@
+Ex1: Want to query offsets at a specific timestamp?
+
+package demo.kafka.consumer;
+
+
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.StringDeserializer;
+
+
+import java.util.*;
+
+public class OffsetByTimestamp {
+
+    public static void main(String[] args) {
+        String bootstrapServers = "localhost:9092";
+        String topic = "SensorTopic1";
+        long timestamp = 1754376370010L; // Replace with your timestamp (in ms)
+
+        // Set properties for AdminClient and Consumer
+        Properties props = new Properties();
+        props.put("bootstrap.servers", bootstrapServers);
+        props.put("key.deserializer", StringDeserializer.class.getName());
+        props.put("value.deserializer", StringDeserializer.class.getName());
+        props.put("group.id", "offset-timestamp-checker");
+
+        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
+            // Get partitions for the topic
+            List<TopicPartition> partitions = new ArrayList<>();
+            consumer.partitionsFor(topic).forEach(p -> {
+                partitions.add(new TopicPartition(topic, p.partition()));
+            });
+
+            // Prepare timestamp map
+            Map<TopicPartition, Long> timestampsToSearch = new HashMap<>();
+            for (TopicPartition partition : partitions) {
+                timestampsToSearch.put(partition, timestamp);
+            }
+
+            // Fetch offsets for the given timestamp
+            Map<TopicPartition, OffsetAndTimestamp> offsetsForTimes = consumer.offsetsForTimes(timestampsToSearch);
+
+            System.out.println("Offsets for timestamp " + timestamp + ":");
+            for (Map.Entry<TopicPartition, OffsetAndTimestamp> entry : offsetsForTimes.entrySet()) {
+                OffsetAndTimestamp offsetTimestamp = entry.getValue();
+                if (offsetTimestamp != null) {
+                    System.out.printf("Partition: %d, Offset: %d, Actual Timestamp: %d%n",
+                            entry.getKey().partition(),
+                            offsetTimestamp.offset(),
+                            offsetTimestamp.timestamp());
+                } else {
+                    System.out.printf("Partition: %d, No offset found for timestamp%n",
+                            entry.getKey().partition());
+                }
+            }
+        }
+    }
+}
+
+
+Ex2: Get End Offsets for a Topic
+
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.PartitionInfo;
+import org.apache.kafka.common.serialization.StringDeserializer;
+
+import java.util.*;
+
+public class EndOffsetFetcher {
+    public static void main(String[] args) {
+        String topic = "SensorTopic1";  // Replace with your topic name
+        String bootstrapServers = "localhost:9092";
+
+        // Set up properties
+        Properties props = new Properties();
+        props.put("bootstrap.servers", bootstrapServers);
+        props.put("group.id", "end-offset-checker");
+        props.put("key.deserializer", StringDeserializer.class.getName());
+        props.put("value.deserializer", StringDeserializer.class.getName());
+        props.put("auto.offset.reset", "earliest"); // Doesn't matter here
+
+        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
+            // Get partition info
+            List<PartitionInfo> partitionInfos = consumer.partitionsFor(topic);
+            List<TopicPartition> partitions = new ArrayList<>();
+
+            for (PartitionInfo partitionInfo : partitionInfos) {
+                partitions.add(new TopicPartition(topic, partitionInfo.partition()));
+            }
+
+            // Assign partitions manually
+            consumer.assign(partitions);
+
+            // Seek to the end
+            consumer.seekToEnd(partitions);
+
+            // Get and print the end offsets
+            System.out.println("End offsets for topic: " + topic);
+            for (TopicPartition partition : partitions) {
+                long offset = consumer.position(partition);
+                System.out.printf("Partition %d: Offset %d%n", partition.partition(), offset);
+            }
+        }
+    }
+}
+
+
+Maven dependencies:
+
+<dependencies>
+    <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka-clients</artifactId>
+        <version>3.7.0</version> <!-- Use the version that matches your Kafka broker -->
+    </dependency>
+</dependencies>
+
+
+

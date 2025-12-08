@@ -1,0 +1,11 @@
+1. To list all the ports:
+netstat -ano | findstr :<PORT>
+netstat -ano | findstr:9092
+  TCP    0.0.0.0:9092           0.0.0.0:0              LISTENING       13064
+  TCP    [::]:9092              [::]:0                 LISTENING       13064
+
+
+2. To kill a process
+taskkill /PID <PID> /F
+ex:  taskkill /PID  13064 /F
+

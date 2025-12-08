@@ -1,0 +1,156 @@
+1. Add the install location of the Confluent bin directory to your PATH: export PATH=<path-to-confluent>/bin:$PATH
+
+2. Install the Kafka Connect Datagen source connector using the Confluent Hub client. This connector generates 
+   mock data for demonstration purposes 
+
+<path-to-confluent>/bin/confluent-hub install --no-prompt confluentinc/kafka-connect-datagen:latest
+
+3. Start Confluent Platform 
+
+<path-to-confluent>/bin/confluent start
+
+Note : This command starts all of the Confluent Platform components; including Kafka, ZooKeeper, Schema Registry, 
+HTTP REST Proxy for Kafka, Kafka Connect, KSQL, and Control Center.
+
+4. Create Kafka Topics
+    > Navigate to the Control Center web interface at http://localhost:9021/.
+    > Select Management -> Topics and click Create topic.
+    > Create a topic named pageviews and click Create with defaults.
+    > Create another topic named users, and click Create with defaults.
+    
+5. Install a Kafka Connector and Generate Sample Data
+   (use Kafka Connect to run a demo source connector called kafka-connect-datagen that creates sample data for
+   the Kafka topics pageviews  and users.)
+   > Click Management -> Kafka Connect.
+   > Click Add connector.
+   > Scroll down to select DatagenConnector from the Connector class list.
+   > Name the connector datagen-pageviews. After naming the connector, new fields appear. Scroll down and 
+     specify the following configuration values:
+
+    In the Key converter class field, type org.apache.kafka.connect.storage.StringConverter.
+    In the kafka.topic field, type pageviews.
+    In the max.interval field, type 100.
+    In the iterations field, type 1000000000.
+    In the quickstart field, type pageviews.
+   
+   > Click Continue.
+   > Review the connector configuration and click Launch.
+
+6 .Run another instance of the Kafka Connect Datagen connector to produce Kafka data to the users topic in AVRO format.
+
+   > Click Add connector.
+   > Scroll down to select DatagenConnector from the Connector class list.
+   > Name the connector datagen-users. After naming the connector, new fields appear. Scroll down and specify the
+     following configuration values:
+
+    In the Key converter class field, type org.apache.kafka.connect.storage.StringConverter.
+    In the kafka.topic field, type users.
+    In the max.interval field, type 1000.
+    In the iterations field, type 1000000000.
+    In the quickstart field, type users.
+   > Click Continue.
+   > Review the connector configuration and click Launch.
+   
+7. Create and Write to a Stream and Table using KSQL
+   (In this step, KSQL is used to create a stream for the pageviews topic, and a table for the users topic)
+   
+   > From the Control Center navigation menu, click Development -> KSQL. 
+   > Click the STREAMS tab -> Add Stream and select the pageviews topic.
+   > Choose your stream options:
+
+    In the How are your messages encoded? field, select AVRO.
+    In the Field(s) you'd like to include in your STREAM field, ensure fields are set as follows:
+        viewtime with type BIGINT
+        userid with type VARCHAR
+        pageid with type VARCHAR
+   
+   > Click Save STREAM.
+   
+   > Click the TABLES tab -> Add a Table and select the users topic.
+   > Choose your table options:
+
+    In the How are your messages encoded? field, select AVRO.
+    In the Key field, select userid.
+    In the Field(s) you'd like to include in your TABLE field, ensure fields are set as follows:
+        registertime with type BIGINT
+        userid with type VARCHAR
+        regionid with type VARCHAR
+        gender with type VARCHAR
+   
+   > Click Save TABLE
+   
+8. Write Queries
+   (These examples write queries using the KSQL tab in Control Center)
+   
+   > From the Control Center navigation menu, click Development -> KSQL. 
+   > Click Query properties to add a custom query property. Set the auto.offset.reset parameter to earliest.
+     (This instructs KSQL queries to read all available topic data from the beginning. This configuration 
+      is used for each subsequent query. )
+   
+   Run the following queries:
+   >Create a non-persistent query that returns data from a stream with the results limited to a maximum of three rows.
+     SELECT pageid FROM pageviews LIMIT 3;
+     
+   > Create a persistent query that filters for female users. The results from this query are written to the 
+     Kafka PAGEVIEWS_FEMALE topic. 
+     This query enriches the pageviews STREAM by doing a LEFT JOIN with the users TABLE on the user ID, where a 
+     condition (gender = 'FEMALE') is met.
+     
+     CREATE STREAM pageviews_female AS SELECT users.userid AS userid, pageid, regionid, gender FROM pageviews 
+     LEFT JOIN users ON  pageviews.userid = users.userid WHERE gender = 'FEMALE';
+   
+   > Create a persistent query where a condition (regionid) is met, using LIKE. Results from this query are 
+     written to a Kafka topic named pageviews_enriched_r8_r9.
+     
+     CREATE STREAM pageviews_female_like_89 WITH (kafka_topic='pageviews_enriched_r8_r9', value_format='AVRO')
+     AS SELECT * FROM pageviews_female WHERE regionid LIKE '%_8' OR regionid LIKE '%_9';
+     
+   > Create a persistent query that counts the pageviews for each region and gender combination in a tumbling 
+     window of 30 seconds when the count is greater than 1. Because the procedure is grouping and counting, 
+     the result is now a table, rather than a stream. Results from this query are written to a Kafka topic called 
+     PAGEVIEWS_REGIONS.
+     
+     CREATE TABLE pageviews_regions AS SELECT gender, regionid , COUNT(*) AS numusers FROM pageviews_female 
+     WINDOW TUMBLING (size 30 second) GROUP BY gender, regionid HAVING COUNT(*) > 1;
+   
+   > Click RUNNING QUERIES.
+   
+9. View Your Stream in Control Center
+   (From the Control Center interface you can view all of your streaming KSQL queries.0
+   
+   > Navigate to the Control Center web interface Monitoring -> Data streams tab
+   
+   > View the consumers that have been created by KSQL
+
+    Click the CONSUMER GROUPS tab and then View Details for the
+     _confluent-ksql-default_query_CSAS_PAGEVIEWS_FEMALE_0 consumer group.
+     
+ 
+    
+   
+   
+   
+      
+      
+     
+   
+
+
+   
+   
+        
+        
+   
+   
+    
+
+   
+   
+   
+
+
+   
+    
+
+  
+

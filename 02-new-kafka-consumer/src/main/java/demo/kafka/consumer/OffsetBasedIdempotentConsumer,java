@@ -1,0 +1,50 @@
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
+
+import java.time.Duration;
+import java.util.*;
+
+public class OffsetBasedIdempotentConsumer {
+    // Keep track of the latest processed offset for each partition
+    private static final Map<TopicPartition, Long> lastProcessedOffsets = new HashMap<>();
+
+    public static void main(String[] args) {
+        String topic = "first-topic";
+
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092");
+        props.put("group.id", "offset-idempotent-consumer");
+        props.put("enable.auto.commit", "false"); // Manual offset commit
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
+        consumer.subscribe(Collections.singletonList(topic));
+
+        while (true) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
+
+            for (ConsumerRecord<String, String> record : records) {
+                TopicPartition tp = new TopicPartition(record.topic(), record.partition());
+                long lastOffset = lastProcessedOffsets.getOrDefault(tp, -1L);
+
+                if (record.offset() <= lastOffset) {
+                    // Already processed
+                    System.out.printf("Skipping duplicate offset %d from partition %d%n", record.offset(), record.partition());
+                    continue;
+                }
+
+                // Process the message
+                System.out.printf("Processing message at offset %d: %s%n", record.offset(), record.value());
+
+                // After successful processing
+                lastProcessedOffsets.put(tp, record.offset());
+            }
+
+            // Optionally commit offsets after batch
+            consumer.commitSync(); // Commits the latest offsets to Kafka
+        }
+    }
+}

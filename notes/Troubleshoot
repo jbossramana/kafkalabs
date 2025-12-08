@@ -1,0 +1,20 @@
+1. Problem:
+
+Exception thrown when sending with key and payload{} to topic xyz TimeoutException: Expiring 1  records for xyz-topic-1:120000ms has 
+passed since batch creation
+
+Solution:
+
+The buffer.memory) controls the total amount of memory available to the producer for buffering. If records are sent faster than they 
+can be transmitted to the server then this buffer space will be exhausted. When the buffer space is exhausted additional send calls
+will block. The threshold for time to block is determined by max.block.ms after which it throws a TimeoutException.
+
+Increase the buffer.memory(default:32 MB)  of  max.block.ms (default: 60000ms)
+        props.put(ProducerConfig.LINGER_MS_CONFIG, 100);
+        props.put(ProducerConfig.BATCH_SIZE_CONFIG,  16_384 * 4);
+        props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 33554432);
+        props.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 60000);
+        props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 30000);
+
+
+

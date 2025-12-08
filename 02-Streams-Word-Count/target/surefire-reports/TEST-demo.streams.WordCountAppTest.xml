@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite tests="3" failures="0" name="demo.streams.WordCountAppTest" time="5.731" errors="0" skipped="0">
+  <properties>
+    <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
+    <property name="sun.boot.library.path" value="D:\MST\software\Java\jdk1.8.0_65\jre\bin"/>
+    <property name="java.vm.version" value="25.65-b01"/>
+    <property name="java.vm.vendor" value="Oracle Corporation"/>
+    <property name="maven.multiModuleProjectDirectory" value="D:\kafka\labs\11-word-count-scaling"/>
+    <property name="java.vendor.url" value="http://java.oracle.com/"/>
+    <property name="path.separator" value=";"/>
+    <property name="guice.disable.misplaced.annotation.check" value="true"/>
+    <property name="java.vm.name" value="Java HotSpot(TM) 64-Bit Server VM"/>
+    <property name="file.encoding.pkg" value="sun.io"/>
+    <property name="user.script" value=""/>
+    <property name="user.country" value="IN"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="sun.os.patch.level" value=""/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="user.dir" value="D:\kafka\labs\11-word-count-scaling"/>
+    <property name="java.runtime.version" value="1.8.0_65-b17"/>
+    <property name="java.awt.graphicsenv" value="sun.awt.Win32GraphicsEnvironment"/>
+    <property name="java.endorsed.dirs" value="D:\MST\software\Java\jdk1.8.0_65\jre\lib\endorsed"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.io.tmpdir" value="C:\Users\K V Ramana Rao\AppData\Local\Temp\"/>
+    <property name="line.separator" value="
+"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="user.variant" value=""/>
+    <property name="os.name" value="Windows 10"/>
+    <property name="classworlds.conf" value="D:\kafka\labs\.metadata\.plugins\org.eclipse.m2e.launching\launches\m2conf4488430398746908284.tmp"/>
+    <property name="jansi.force" value="true"/>
+    <property name="sun.jnu.encoding" value="Cp1252"/>
+    <property name="java.library.path" value="D:\MST\software\Java\jdk1.8.0_65\bin;C:\WINDOWS\Sun\Java\bin;C:\WINDOWS\system32;C:\WINDOWS;D:/MST/software/Java/jdk1.8.0_65/bin/../jre/bin/server;D:/MST/software/Java/jdk1.8.0_65/bin/../jre/bin;D:/MST/software/Java/jdk1.8.0_65/bin/../jre/lib/amd64;C:\Program Files (x86)\Intel\iCLS Client\;C:\Program Files\Intel\iCLS Client\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\HashiCorp\Vagrant\bin;C:\PuTTY\;C:\Program Files\Cloud Foundry;C:\WINDOWS\System32\OpenSSH\;C:\Program Files (x86)\Yarn\bin\;C:\ProgramData\chocolatey\bin;C:\Go\bin;C:\Program Files\Git\cmd;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files (x86)\sbt\bin;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\Ruby24-x64\bin;C:\Users\K V Ramana Rao\AppData\Local\Microsoft\WindowsApps;C:\Users\K V Ramana Rao\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Python 3.6;D:\MST\software\apache-maven-3.3.1\bin;C:\Python27;D:\MST\software\gradle-4.7\bin;D:\MST\kafka\zookeeper-3.4.10\bin;C:\Users\K V Ramana Rao\AppData\Local\GitHubDesktop\bin;C:\Users\K V Ramana Rao\AppData\Local\Microsoft\WindowsApps;C:\Users\K V Ramana Rao\AppData\Local\Yarn\bin;C:\Users\K V Ramana Rao\go\bin;C:\Users\K V Ramana Rao\AppData\Local\Programs\Microsoft VS Code\bin;D:\Kafka\confluent-5.1.2\bin;D:\Kafka\OpenSSL\bin;D:\MST\software\Java\jdk1.8.0_65\bin;D:\Multipass\bin;D:\kafka\software\sts-4.2.2.RELEASE;;."/>
+    <property name="jansi.passthrough" value="true"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="java.class.version" value="52.0"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="os.version" value="10.0"/>
+    <property name="user.home" value="C:\Users\K V Ramana Rao"/>
+    <property name="user.timezone" value="Asia/Calcutta"/>
+    <property name="java.awt.printerjob" value="sun.awt.windows.WPrinterJob"/>
+    <property name="java.specification.version" value="1.8"/>
+    <property name="file.encoding" value="Cp1252"/>
+    <property name="user.name" value="K V Ramana Rao"/>
+    <property name="java.class.path" value="D:\kafka\software\sts-4.2.2.RELEASE\plugins\org.eclipse.m2e.maven.runtime_1.11.0.20190220-2117\jars\plexus-classworlds-2.5.2.jar"/>
+    <property name="java.vm.specification.version" value="1.8"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.home" value="D:\MST\software\Java\jdk1.8.0_65\jre"/>
+    <property name="sun.java.command" value="org.codehaus.plexus.classworlds.launcher.Launcher -B -s D:\kafka\software\apache-maven-3.3.1\conf\settings.xml install -Dstyle.color=always"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="user.language" value="en"/>
+    <property name="awt.toolkit" value="sun.awt.windows.WToolkit"/>
+    <property name="java.vm.info" value="mixed mode"/>
+    <property name="java.version" value="1.8.0_65"/>
+    <property name="java.ext.dirs" value="D:\MST\software\Java\jdk1.8.0_65\jre\lib\ext;C:\WINDOWS\Sun\Java\lib\ext"/>
+    <property name="sun.boot.class.path" value="D:\MST\software\Java\jdk1.8.0_65\jre\lib\resources.jar;D:\MST\software\Java\jdk1.8.0_65\jre\lib\rt.jar;D:\MST\software\Java\jdk1.8.0_65\jre\lib\sunrsasign.jar;D:\MST\software\Java\jdk1.8.0_65\jre\lib\jsse.jar;D:\MST\software\Java\jdk1.8.0_65\jre\lib\jce.jar;D:\MST\software\Java\jdk1.8.0_65\jre\lib\charsets.jar;D:\MST\software\Java\jdk1.8.0_65\jre\lib\jfr.jar;D:\MST\software\Java\jdk1.8.0_65\jre\classes"/>
+    <property name="java.vendor" value="Oracle Corporation"/>
+    <property name="maven.home" value="D:\kafka\labs\11-word-count-scaling\EMBEDDED"/>
+    <property name="style.color" value="always"/>
+    <property name="file.separator" value="\"/>
+    <property name="java.vendor.url.bug" value="http://bugreport.sun.com/bugreport/"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="sun.desktop" value="windows"/>
+    <property name="sun.cpu.isalist" value="amd64"/>
+  </properties>
+  <testcase classname="demo.streams.WordCountAppTest" name="dummyTest" time="3.342"/>
+  <testcase classname="demo.streams.WordCountAppTest" name="makeSureCountsAreCorrect" time="1.48"/>
+  <testcase classname="demo.streams.WordCountAppTest" name="makeSureWordsBecomeLowercase" time="0.909"/>
+</testsuite>

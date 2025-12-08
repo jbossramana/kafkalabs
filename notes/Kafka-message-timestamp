@@ -1,0 +1,17 @@
+
+A timestamp representing an absolute time, without timezone information. The corresponding Java type is a java.util.Date. 
+The underlying representation is a long representing the number of milliseconds since Unix epoch(acronym) - Universal Time Coordinated (UTC)
+
+
+
+        Date date = new Date(1318386508000L);
+        DateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        format.setTimeZone(TimeZone.getTimeZone("Etc/UTC"));
+        String formatted = format.format(date);
+        System.out.println(formatted);
+        format.setTimeZone(TimeZone.getTimeZone("Australia/Sydney"));
+        formatted = format.format(date);
+        System.out.println(formatted);
+        
+        
+        

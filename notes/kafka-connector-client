@@ -1,0 +1,112 @@
+
+<dependency>
+  <groupId>org.apache.kafka</groupId>
+  <artifactId>kafka-clients</artifactId>
+  <version>2.8.1</version>
+</dependency>
+
+
+<dependency>
+  <groupId>io.confluent</groupId>
+  <artifactId>kafka-connect-jdbc</artifactId>
+  <version>5.5.2</version>
+</dependency>
+
+
+Properties props = new Properties();
+props.put("bootstrap.servers", "localhost:9092");
+props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+KafkaProducer<String, String> producer = new KafkaProducer<>(props);
+
+String endpoint = "http://localhost:8083/connectors";
+String connectorName = "my-connector";
+
+Map<String, String> connectorConfig = new HashMap<>();
+connectorConfig.put("name", connectorName);
+connectorConfig.put("connector.class", "org.apache.kafka.connect.file.FileStreamSourceConnector");
+connectorConfig.put("tasks.max", "1");
+connectorConfig.put("topic", "my-topic");
+connectorConfig.put("file", "/path/to/my/file.txt");
+
+String requestBody = new ObjectMapper().writeValueAsString(connectorConfig);
+
+ProducerRecord<String, String> record = new ProducerRecord<>(endpoint, null, requestBody);
+producer.send(record);
+producer.flush();
+
+
+jdbc connector client example:
+
+import java.util.*;
+import org.apache.kafka.clients.producer.*;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.kafka.connect.runtime.rest.entities.ConfigInfos;
+import org.apache.kafka.connect.storage.StringConverter;
+import org.apache.kafka.connect.util.ConnectorUtils;
+
+public class JdbcConnectorClient {
+    private static final String KAFKA_CONNECT_URL = "http://localhost:8083";
+    private static final String KAFKA_TOPIC = "my-topic";
+    private static final String JDBC_SOURCE_CONNECTOR_NAME = "jdbc-source-connector";
+
+    public static void main(String[] args) {
+        // Set up Kafka producer
+        Properties props = new Properties();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        KafkaProducer<String, String> producer = new KafkaProducer<>(props);
+
+        // Set up connector configuration
+        Map<String, String> config = new HashMap<>();
+        config.put("name", JDBC_SOURCE_CONNECTOR_NAME);
+        config.put("connector.class", "io.confluent.connect.jdbc.JdbcSourceConnector");
+        config.put("connection.url", "jdbc:mysql://localhost:3306/mydb");
+        config.put("connection.user", "myuser");
+        config.put("connection.password", "mypassword");
+        config.put("mode", "incrementing");
+        config.put("incrementing.column.name", "id");
+        config.put("topic.prefix", KAFKA_TOPIC);
+        config.put("table.whitelist", "mytable");
+
+        // Create connector
+        String requestBody = new ConfigInfos(config).toUrlEncodedJsonString();
+        ProducerRecord<String, String> record = new ProducerRecord<>(KAFKA_CONNECT_URL + "/connectors", null, requestBody);
+        producer.send(record);
+        producer.flush();
+
+        // Check if connector was created successfully
+        String connectorStatusUrl = KAFKA_CONNECT_URL + "/connectors/" + JDBC_SOURCE_CONNECTOR_NAME + "/status";
+        int maxRetries = 10;
+        int retryCount = 0;
+        while (retryCount < maxRetries) {
+            ProducerRecord<String, String> statusRecord = new ProducerRecord<>(connectorStatusUrl, null);
+            RecordMetadata metadata;
+            try {
+                metadata = producer.send(statusRecord).get();
+            } catch (Exception e) {
+                retryCount++;
+                continue;
+            }
+            ConsumerRecord<String, String> statusRecordResponse = ConnectorUtils.getConnectorStatus(metadata.topic(), metadata.partition(), metadata.offset(), KAFKA_CONNECT_URL);
+            if (statusRecordResponse != null && statusRecordResponse.value().contains("\"state\":\"RUNNING\"")) {
+                System.out.println("Connector created successfully!");
+                break;
+            } else {
+                retryCount++;
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+            }
+        }
+
+        producer.close();
+    }
+}
+
+
+

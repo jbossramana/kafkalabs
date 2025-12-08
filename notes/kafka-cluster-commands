@@ -1,0 +1,173 @@
+1. Install jdk 11/17/21
+
+2. Set environment variable
+JAVA_HOME -> C:/JDK/JDK11
+PATH -> C:/JDK/JDK11/bin
+
+* Test the java version in the command prompt (C:\> java -version)
+
+3. Download kafka software
+https://kafka.apache.org/downloads -> Binary downloads -> Scala 2.13  - kafka_2.13-3.7.0.tgz (asc, sha512)
+
+4. Extract the zip file directly into C:\kafka_2.13-3.7.0
+
+ClusterLab1: Create Multiple Kafka Brokers
+==========================================
+
+* three copies of  server.properties file -> server1.properties, server2.properties, server3.properties
+
+1. broker1
+➢ config/server1.properties
+# The id of the broker. This must be set to a unique integer for each broker.
+broker.id=1
+# The port the socket server listens on
+port=9092
+# A comma seperated list of directories under which to
+store log files
+log.dirs=c:/logs/kafka-logs-1
+
+2. broker2
+➢ config/server2.properties
+# The id of the broker. This must be set to a unique integer for each broker.
+broker.id=2
+# The port the socket server listens on
+port=9093
+# A comma seperated list of directories under which to
+store log files
+log.dirs=c:/logs/kafka-logs-2
+
+3. broker3
+➢ config/server3.properties
+# The id of the broker. This must be set to a unique integer for each broker.
+broker.id=3
+# The port the socket server listens on
+port=9094
+# A comma seperated list of directories under which to
+store log files
+log.dirs=c:/logs/kafka-logs-3
+
+3.1 Start Zookeeper
+
+bin/windows> zookeeper-server-start.bat ../../config/zookeeper.properties
+
+3.2 Start Multiple Brokers
+
+Broker1
+bin/windows> kafka-server-start.bat ../../config/server1.properties
+
+Broker2
+bin/windows> kafka-server-start.bat ../../config/server2.properties
+
+Broker3
+bin/windows> kafka-server-start.bat ../../config/server3.properties
+
+4. Creating a Topic
+bin/kafka-topics.bat --create --bootstrap-server localhost:9092 --replication-factor 3 --partitions 3 --topic failover
+
+5.  "Describe" the topic
+bin/kafka-topics.bat --describe --bootstrap-server localhost:9092 --topic failover
+
+6. Start Kafka Consumer that uses Replicated Topic
+kafka-console-consumer.sh --bootstrap-server localhost:9092,localhost:9093 --topic failover --frombeginning
+
+7. Start Kafka Producer that uses Replicated Topic
+kafka-console-producer.sh --bootstrap-server localhost:9092,localhost:9093  --topic failover
+
+Note : send messages from producer and observe the consumer
+
+8. Start two more consumers
+kafka-console-consumer.bat --bootstrap-server localhost:9092,localhost:9093 --topic failover --frombeginning
+
+kafka-console-consumer.bat --bootstrap-server localhost:9092,localhost:9093 --topic failover --frombeginning
+
+Note : send few more messages from producer and observe the consumer.
+
+---------------------------------------------------------------------------
+STOP ALL THE EXISTING CONSUMERS
+
+1. Start three consumers with consumer group
+kafka-console-consumer.sh --bootstrap-server localhost:9092,localhost:9093 --topic failover --consumer-property group.id=failover-group
+kafka-console-consumer.sh --bootstrap-server localhost:9092,localhost:9093 --topic failover --consumer-property group.id=failover-group
+kafka-console-consumer.sh --bootstrap-server localhost:9092,localhost:9093 --topic failover --consumer-property group.id=failover-group
+
+Note : Send few messages from the Kafka producer console. Notice that the messages are spread evenly among the consumers.
+
+2. Describe the topic and see the leaders for the partitions.
+
+3. Kill one server
+
+4. Describe the topic and see the leader changes
+
+5. Test the broker failover working or not
+Test the failover working, by sending two more messages from the producer console.
+Then notice if the consumers still get the messages.
+Notice that the messages are spread evenly among the remaining live consumers.
+
+
+Kafka-Zookeeper- Cluster
+=========================
+
+Every ZooKeeper server services clients. Clients connect to exactly one server to submit requests. Read requests are serviced from the
+local replica of each server database. Requests that change the state of the service, write requests, are processed by an
+agreement protocol.
+
+As part of the agreement protocol all write requests from clients are forwarded to a single server, called the leader. The rest of the
+ZooKeeper servers, called followers, receive message proposals from the leader and agree upon message delivery. The
+messaging layer takes care of replacing leaders on failures and syncing followers with leaders.
+
+1.  Kafka (add zookeeper details)
+Add the below property in Kafka servers (all the 3)
+zookeeper.connect=localhost:2181,localhost:2182,localhost:2183
+
+2. Creating the Zookeeper properties files
+➢ Kafka/config/zookeeper1.properties
+dataDir=D:/logs/zookeeper/zookeeper1
+clientPort=2181
+server.1=localhost:2666:3666
+server.2=localhost:2667:3667
+server.3=localhost:2668:3668
+
+Note :
+• The ports 2666:3666s are used to connect the individual follower nodes to the leader nodes. The other port is used for leader election.
+
+➢ Kafka/config/zookeeper2.properties
+dataDir=D:/kafka/data/zookeeper2
+clientPort=2182
+server.1=localhost:2666:3666
+server.2=localhost:2667:3667
+server.3=localhost:2668:3668
+
+➢ Kafka/config/zookeeper3.properties
+dataDir=D:/kafka/data/zookeeper3
+clientPort=2183
+server.1=localhost:2666:3666
+server.2=localhost:2667:3667
+server.3=localhost:2668:3668
+
+3. Create Unique Zookeeper Id on Individual Nodes
+On node1, create a unique zookeeper id and store it in the “myid” file that should be located under the directory that is 
+specified by the “dataDir” in zoo.cfg.
+
+On node1, the unique id will be “1”, which will be stored in the /zookeeper../myid file.
+
+4a. Start Zookeeper instances
+> bin/zookeeper-server-start.bat config/zookeeper1.properties
+> bin/zookeeper-server-start.bat config/zookeeper2.properties
+> bin/zookeeper-server-start.bat config/zookeeper3.properties
+
+4b.Start Kafka servers
+> bin/kafka-server-start.bat config/server1.properties
+> bin/kafka-server-start.bat config/server2.properties
+> bin/kafka-server-start.bat config/server3.properties
+
+5. Create a topic "cluster"
+> bin/kafka-topics.bat --create --bootstrap-server localhost:9092,localhost:9093,localhost:9094 --replicationfactor 2 --partitions 1 --topic cluster
+
+6. List the topics
+> bin/kafka-topics.bat --list --bootstrap-server localhost:9092,localhost:9093,localhost:9094
+
+7. Send messages to "cluster" topic
+> bin/kafka-console-producer.bat --bootstrap-server localhost:9092,localhost:9093,localhost:9094 --topic cluster
+
+8. Receive messages from "cluster" topic
+> bin/kafka-console-consumer.bat --bootstrap-server localhost:9092,localhost:9093,localhost:9094  --topic cluster --from-beginning

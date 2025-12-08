@@ -1,0 +1,29 @@
+All the data that we are working on with KSQL is produced to Kafka topics by some client. This client can be any 
+Application, Kafka connectors etc., which produces continuous never-ending data to the topics.
+
+KSQL does not directly interact with these topics, it rather introduces a couple of abstractions in between to process
+the data, which are known as Streams and Tables.
+
+What are Streams and Tables?
+
+Both Streams and Tables are wrappers on top of Kafka topics, which has continuous never-ending data. But, conceptually 
+these abstractions are different because-
+
+Streams represent data in motion capturing events happening in the world, and has the following features-
+
+    Unbounded
+    Storing a never-ending continuous flow of data and thus Streams are unbounded as they have no limit.
+    
+    Immutable
+    Any new data that comes in gets appended to the current stream and does not modify any of the existing records, 
+    making it completely immutable.
+
+While A table represents the data at rest or a materialized view of that stream of events with the latest value of 
+a key and has the following features-
+
+    Bounded
+    Represents a snapshot of the stream at a time, and therefore it has its limits defined.
+    
+    Mutable
+    Any new data(<Key, Value> pair) that comes in gets added to the current table if the table does not have an 
+    existing entry with the same key otherwise, the existing record is mutated to have the latest value for that key.

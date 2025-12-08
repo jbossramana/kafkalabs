@@ -1,0 +1,20 @@
+
+GC Alogirthms:
+-----------------
+
+High Throughput : ParallelGC
+
+Low Latency : CMS, G1, ZGC
+
+Default Algorithms are:
+--------------------------
+
+jdk8 : ParallelGC
+jdk 11 onwards : G1GC
+
+
+Streaming Platform:
+----------------------
+
+Low Latency :  Kafka Stream API (Real-time processing)
+High Throughput :  Spark Stream API (Micro-batch processing)

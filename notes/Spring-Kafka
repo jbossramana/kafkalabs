@@ -1,0 +1,220 @@
+Three different implementations for consuming messages from a Kafka topic in a Spring application. Each implementation 
+varies in terms of acknowledgment strategy and message processing mode (record-wise, batch-wise, or a hybrid approach). 
+Below is an explanation of each component and configuration, followed by the steps to understand their functionality.
+
+1. Record Mode
+KafkaMessageListener
+
+@Component
+class KafkaMessageListener implements AcknowledgingMessageListener<String, String> {
+    @KafkaListener(topics = "your_topic", groupId = "your_group_id")
+    public void onMessage(ConsumerRecord<String, String> consumerRecord, Acknowledgment acknowledgment) {
+        try {
+            // Process the message
+            String message = consumerRecord.value();
+            System.out.println("Received message: " + message);
+
+            // Business logic processing
+
+            // Commit offset for this record
+            acknowledgment.acknowledge();
+        } catch (Exception e) {
+            // Handle exception
+            e.printStackTrace();
+        }
+    }
+}
+
+Explanation:
+
+This listener processes messages one at a time. Each message is received as a ConsumerRecord.
+The Acknowledgment object is used to manually acknowledge the receipt of the message after processing.
+If processing fails, the exception is caught, and the stack trace is printed.
+
+
+Kafka Configuration
+====================
+
+@Configuration
+class KafkaConfig {
+    @Value("${spring.kafka.bootstrap-servers}")
+    private String bootstrapServers;
+
+    @Bean
+    public Map<String, Object> consumerConfigs() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "your_group_id");
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        return props;
+    }
+
+    @Bean
+    public ConsumerFactory<String, String> consumerFactory() {
+        return new DefaultKafkaConsumerFactory<>(consumerConfigs());
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory());
+        factory.setBatchListener(false); // Disable batch listening
+        factory.getContainerProperties().setAckMode(AckMode.RECORD); // Acknowledge records individually
+        return factory;
+    }
+}
+
+
+Explanation:
+============
+This configuration class sets up Kafka consumer properties, including bootstrap servers and deserializer classes.
+It creates a ConsumerFactory and a ConcurrentKafkaListenerContainerFactory for message consumption, specifying that messages 
+will be acknowledged one by one.
+
+
+2. Batch Mode
+=============
+
+@Component
+class KafkaMessageListener implements BatchAcknowledgingMessageListener<String, String> {
+    @Override
+    @KafkaListener(topics = "your_topic", groupId = "your_group_id")
+    public void onMessage(List<ConsumerRecord<String, String>> consumerRecords, Acknowledgment acknowledgment) {
+        try {
+            for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
+                // Process each message
+                String message = consumerRecord.value();
+                System.out.println("Received message: " + message);
+                
+                // Business logic processing
+            }
+            
+            // Commit offsets for all records in the batch
+            acknowledgment.acknowledge();
+        } catch (Exception e) {
+            // Handle exception
+            e.printStackTrace();
+        }
+    }
+}
+
+
+Explanation:
+============
+
+This listener processes messages in batches, where a list of ConsumerRecords is received.
+All messages in the batch are processed, and once successful, the acknowledgment is called to commit the offsets for the entire batch.
+
+Batch Configuration
+===================
+
+@Configuration
+class KafkaConfig {
+    // Similar configuration as before, but for batch processing
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory());
+        factory.setBatchListener(true); // Enable batch listening
+        return factory;
+    }
+}
+
+
+Explanation:
+
+The Kafka configuration for batch processing enables batch listening, allowing multiple records to be processed at once.
+
+
+3. Commit All Poll Records [Hybrid]
+==================================
+
+@Component
+class KafkaMessageListener implements AcknowledgingMessageListener<String, String> {
+    private static final int BATCH_SIZE = 10; // Size of the record pool
+    private List<ConsumerRecord<String, String>> recordPool = new ArrayList<>();
+
+    @Override
+    @KafkaListener(topics = "your_topic", groupId = "your_group_id")
+    public void onMessage(ConsumerRecord<String, String> consumerRecord, Acknowledgment acknowledgment) {
+        try {
+            recordPool.add(consumerRecord); // Add record to the pool
+
+            if (recordPool.size() >= BATCH_SIZE) {
+                processAndCommitBatch(acknowledgment); // Process and commit batch if pool is full
+            }
+        } catch (Exception e) {
+            // Handle exception
+            e.printStackTrace();
+        }
+    }
+
+    private void processAndCommitBatch(Acknowledgment acknowledgment) {
+        // Process records in the pool
+        for (ConsumerRecord<String, String> record : recordPool) {
+            String message = record.value();
+            System.out.println("Received message: " + message);
+            // Business logic processing
+        }
+
+        // Commit offsets for all records in the batch
+        acknowledgment.acknowledge();
+
+        // Clear the pool after processing and committing
+        recordPool.clear();
+    }
+}
+
+
+Explanation:
+============
+
+This listener collects messages into a pool until a specified batch size is reached.
+When the batch size is met, it processes all collected records and commits the offsets in a single acknowledgment.
+
+
+Hybrid Configuration
+====================
+
+@Configuration
+class KafkaConfig {
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory());
+        factory.getContainerProperties().setAckMode(AckMode.MANUAL); // Set to MANUAL for manual commit
+        return factory;
+    }
+}
+
+
+Explanation:
+============
+
+The configuration for the hybrid listener specifies manual acknowledgment, allowing the listener to commit offsets at the 
+appropriate time based on batch processing.
+
+Conclusion
+==========
+
+In summary, the provided code demonstrates three different approaches to consume and process Kafka messages in a Spring application:
+
+Record Mode for single-message processing.
+Batch Mode for processing multiple messages at once.
+Hybrid Mode for collecting messages into a pool before processing and committing them in batches.
+
+Each mode is designed to suit different performance and processing requirements, allowing flexibility based on the use case.
+
+
+Use Cases
+=========
+
+> Real-Time Processing (Record Mode): Ideal for applications requiring immediate action on each message, ensuring high data integrity.
+> Batch Processing (Batch Mode): Best suited for scenarios where processing efficiency is paramount, and messages can be handled in bulk.
+> Hybrid Processing (Commit All Poll Records): Offers a balance between the two, allowing for both efficiency and timely processing based
+  on predefined thresholds.
+
+
+

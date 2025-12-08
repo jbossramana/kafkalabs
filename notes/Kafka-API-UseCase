@@ -1,0 +1,29 @@
+kafka API:
+
+Core:
+Producer API
+Consumer API
+
+Extension:
+Connector API
+Stream API
+
+
+1. Database/hdfs/external datasource -> Kafka
+     |_ Producer API   /  Source Connector
+
+2, Kafka -> Database/hdfs/external datasource
+     |_ Consumer API   / Sink Connector
+
+3. Kafka -> Kafka
+    |_ Consumer API & Producer API  / Stream API
+
+4. App -> Kafka
+    |_ Producer API
+
+5. Kafka -> App
+    |_ Consumer API
+
+
+
+

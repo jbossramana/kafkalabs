@@ -1,0 +1,15 @@
+1. Consumer group documentation
+kafka-consumer-groups
+
+2. Describe the group
+kafka-consumer-groups --bootstrap-server localhost:9092 --describe --group fg-group
+
+3. To reset the offsets to the beginning of each partition
+kafka-consumer-groups --bootstrap-server localhost:9092 --group fg-group --reset-offsets --to-earliest --execute --topic first-topic
+
+4. shift offsets by 2 (forward) as another strategy
+kafka-consumer-groups --bootstrap-server localhost:9092 --group fg-group --reset-offsets --shift-by 2 --execute --topic first-topic
+
+5. shift offsets by 2 (backward) as another strategy
+kafka-consumer-groups --bootstrap-server localhost:9092 --group fg-group --reset-offsets --shift-by -2 --execute --topic first-topic
+

@@ -1,0 +1,51 @@
+Combining two Kafka Streams from separate instances can be achieved using the Kafka Streams DSL by leveraging the 
+KStream#through() method and Kafka topics as intermediate connectors. This approach allows you to bridge the gap 
+between two separate Kafka Streams applications.
+
+Here are the steps to combine two streams from two separate Kafka Streams instances:
+
+Create Two Kafka Streams Instances: Ensure you have two separate Kafka Streams instances, each processing its own 
+input data and producing its own output to Kafka topics.
+
+Define Intermediate Topics: You need to define intermediate Kafka topics to connect the two streams. These topics 
+will be used to pass data between the two instances. You can create these topics manually or configure them to be 
+auto-created by Kafka.
+
+Send Data from the First Instance to Intermediate Topic: In the first Kafka Streams instance, send the processed data 
+to the intermediate topic using the to() or through() method.
+
+
+KStream<String, String> firstStream = builder.stream("input-topic-1");
+// Process data in the first stream
+firstStream.mapValues(value -> /* processing logic */)
+           .to("intermediate-topic");
+Send Data from the Second Instance to Intermediate Topic: In the second Kafka Streams instance, similarly, send the 
+processed data to the same intermediate topic.
+
+
+KStream<String, String> secondStream = builder.stream("input-topic-2");
+// Process data in the second stream
+secondStream.mapValues(value -> /* processing logic */)
+            .to("intermediate-topic");
+Consume Data from the Intermediate Topic in Both Instances: Now, in both Kafka Streams instances, create a new 
+stream that consumes data from the same intermediate topic.
+
+KStream<String, String> intermediateStream = builder.stream("intermediate-topic");
+// Perform any further processing on the intermediate stream
+Continue Processing: You can continue processing the intermediateStream as needed. You now have data from both separate 
+instances combined into a single stream.
+
+Send the Combined Output to an Output Topic: If you want to produce the combined data to an output topic, you can use the 
+to() method again in either of the instances.
+
+intermediateStream.to("output-topic");
+
+Start the Kafka Streams Instances: Start both Kafka Streams instances, and they will process the data and combine it 
+using the intermediate topic.
+
+Remember to configure Kafka properties, such as bootstrap servers, application IDs, and Serde configurations, correctly 
+in both instances to ensure proper connectivity and serialization/deserialization of data.
+
+By following these steps, you can combine two Kafka Streams from separate instances by using intermediate Kafka topics 
+as connectors to pass data between them. This allows you to scale your Kafka Streams processing across multiple instances 
+while still being able to merge and process the data together.

@@ -1,0 +1,35 @@
+The example is used to demo how to use Kafka Connect to stream data from source which is  file test.txt 
+to destination which is also a file, test.sink.txt. 
+
+
+
+1. Start ZooKeeper
+>zookeeper-server-start.sh config/zookeeper.properties 
+	
+
+2. Start Kafka Server
+>kafka-server-start.sh config/server.properties
+
+
+3. Start the Source and Sink connectors
+
+>connect-standalone.sh config/connect-standalone.properties config/connect-file-source.properties config/connect-file-sink.properties
+
+4. Start the Source connector
+
+Write some content to the test.txt file
+echo 'hello' >> test.txt
+echo 'halo' >> test.txt
+echo 'salut' >> test.txt
+
+5.  Check whether the Source connector feed the test.txt content into the topic connect-test or not
+
+>kafka-console-consumer.sh  --zookeeper localhost:2181 --from-beginning --topic connect-test
+
+
+6. Check whether the Sink Connector write content to the test.sink.txt or not
+
+cat test.sink.txt
+
+
+

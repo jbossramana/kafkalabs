@@ -1,0 +1,158 @@
+sudo apt install mysql-server-5.7
+sudo mysql -uroot
+GRANT ALL PRIVILEGES ON *.* TO 'kafka'@'localhost' IDENTIFIED BY 'kafka';
+create database demo;
+use demo;
+create table foobar (c1 int, c2 varchar(255),create_ts timestamp DEFAULT CURRENT_TIMESTAMP , update_ts timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP );
+insert into foobar (c1,c2) values(1,'foo');
+select * from foobar;
+
+
+ElasticSearch
+-------------
+
+1. Add the proper GPG key for ElasticSearch
+$ wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+
+2.Make sure to install/update transport
+$ sudo apt-get install apt-transport-https
+
+3. Save the repo definition
+$ echo "deb https://artifacts.elastic.co/packages/5.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-5.x.list
+
+4. Update APT and install ElasticSearch from APT
+$ sudo apt-get update && sudo apt-get install elasticsearch
+
+5. Reload the daemon
+$ sudo /bin/systemctl daemon-reload
+
+6. Allow ElasticSearch to start on boot
+$ sudo /bin/systemctl enable elasticsearch.service
+
+7. Lets fire up ElasticSearch...
+$ sudo systemctl start elasticsearch.service
+
+8. Look at the logs and make sure that ElasticSearch has properly initiated
+sudo cat /var/log/elasticsearch/elasticsearch.log
+
+
+
+jq
+--
+sudo apt install jq
+
+
+mysql driver
+------------
+copy mysql driver (mysql-connector-java-5.1.47.jar)  into  confluent../share/java/kafka-connect-jdbc
+
+
+Create Kafka Connect Source JDBC Connector
+------------------------------------------
+./confluent load jdbc_source_mysql_foobar_01 -d /labs/connect/kafka-connect-jdbc-source.json
+./confluent status jdbc_source_mysql_foobar_01
+
+
+Test that the Source Connector is Working
+------------------------------------------
+./kafka-avro-console-consumer \
+--bootstrap-server localhost:9092 \
+--property schema.registry.url=http://localhost:8081 \
+--property print.key=true \
+--from-beginning \
+--topic mysql-foobar
+
+We  should see almost instantly the row of data that we inserted above, now on the Kafka topic:
+
+null    {"c1":{"int":1},"c2":{"string":"foo"},"create_ts":1501796305000,"update_ts":1501796305000}
+
+
+MySQL session - insert/update some data:
+----------------------------------------
+
+sudo mysql --user=kafka --password=kafka demo
+
+
+insert into foobar (c1,c2) values(2,'foo');
+update foobar set c2='bar' where c1=1;
+
+
+Note : In our console consumer session you should see original first row, plus the additional data appearing in the topic
+       – both the two new rows (c1=2, c1=3), as well as the updated row (c1=1). 
+
+
+Note : update_ts column is managed automagically by MySQL (other RDBMS have similar functionality), and Kafka Connect’s JDBC connector is using this to 
+       pick out new and updated rows from the database.
+
+Note : kafka Connect tracks the offset of the data that its read using the connect-offsets topic.
+
+./kafka-console-consumer \
+--bootstrap-server localhost:9092 \
+--from-beginning \
+--property print.key=true \
+--topic connect-offsets
+
+
+Stream Data from Kafka to File
+------------------------------
+
+1. Load it up into Connect:
+
+$ ./bin/confluent load file-sink-mysql-foobar -d  labs/connect/mysql/kafka-connect-file-sink.json
+
+
+2. Check the connector status 
+
+$ ./bin/confluent status file-sink-mysql-foobar
+
+
+
+3. Now in the named file we will see the existing contents of the message:
+
+$ ./bin/confluent>  tail -f kafka-mysql-foobar.txt
+
+4. and add another row to the table in mySQL:
+
+mysql> insert into foobar (c1,c2) values (4,'bar');
+
+
+
+Confluent control center console
+---------------------------------
+
+
+Management -> Kafka Connect
+
+check Bring data in and send data our
+
+
+
+
+Stream data from Kafka to Elasticsearch
+---------------------------------------
+
+1. Load the connector using the Confluent CLI:
+
+./bin/confluent load es-sink-mysql-foobar-01 -d /labs/connect/mysql/kafka-connect-elasticsearch-sink.json
+./bin/confluent status es-sink-mysql-foobar-01 
+
+
+2. Querying the data using the Elasticsearch REST API shows that the data is being streamed to it from Kafka:
+
+$ curl -s "http://localhost:9200/mysql-foobar/_search"|jq '.hits'
+
+3. We can also see that mapping has been created, using the schema of the source MySQL table – another great reason for using the Confluent Schema Registry.
+
+$ curl -s "http://localhost:9200/mysql-foobar/_mappings"|jq '.'
+
+
+Further Practice:
+-----------------
+
+Single Message Transforms (SMT) is a functionality within Kafka Connect that enables the transformation … of single messages
+
+
+
+
+
+

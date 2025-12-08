@@ -1,0 +1,15 @@
+The listeners configuration parameter specifies the network interface and port(s) that the Kafka broker will bind to and listen on for
+incoming client connections. This is the actual address that clients will use to connect to the broker, and it may be different from 
+the address that other brokers in the cluster use to communicate with each other.
+
+On the other hand, the advertised.listeners configuration parameter specifies the address that the broker should advertise to clients 
+in order to establish connections. This may be different from the actual address that the broker is bound to and listening on, and it's 
+typically used in scenarios where clients need to connect to the broker from outside the network or through a load balancer or a firewall.
+
+In other words, listeners is the address that Kafka brokers use to bind and listen for incoming client connections, while advertised.listeners 
+is the address that Kafka brokers advertise to clients in order to establish connections.
+
+For example, if you have a Kafka broker running on a machine with an IP address of 192.168.1.100 and you configure
+listeners=PLAINTEXT://192.168.1.100:9092, clients will use that address to connect to the broker. However, if the broker is behind a firewall 
+or a load balancer and clients cannot reach it directly, you could use advertised.listeners=PLAINTEXT://kafka.example.com:9092 to advertise a 
+different address that clients can use to connect to the broker through the firewall or the load balancer.

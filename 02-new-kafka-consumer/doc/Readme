@@ -1,0 +1,80 @@
+ConsumerRecords 
+===============
+
+It is a group of records from a Kafka topic partition. 
+
+The ConsumerRecords class is a container that holds a list of ConsumerRecord(s) per partition
+for a particular topic. 
+
+There is one ConsumerRecord list for every topic partition returned by a the consumer.poll().
+
+consumer.commitAsync() which commit offsets returned on the last call to consumer.poll(...) for all 
+the subscribed list of topic partitions.
+
+
+Kafka Consumer Poll method
+==========================
+
+
+The poll method returns fetched records based on current partition offset. 
+
+The poll method is a blocking method waiting for specified time in seconds. 
+
+If no records are available after the time period specified, the poll method returns an empty ConsumerRecords.
+
+When new records become available, the poll method returns straight away.
+
+We can control the maximum records returned by the poll() with props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 100);
+
+The poll method is not thread safe and is not meant to get called from multiple threads.
+
+
+Lab:
+
+1. Try running Single consumer in same group
+2. Try Three Consumers in same group
+
+3. Try Three Consumers in different Consumer group
+
+Check the logs and answer the below question.
+
+Question : Why does each consumer get the same messages?
+
+They do because they are each in their own consumer group, and each consumer group is a subscription to the topic.
+
+
+Note: Consumers in the same group divide up and share partitions.
+Each consumer groups gets a copy of the same data. 
+
+Each consumer group really has a unique set of offset/partition pairs per.
+
+
+
+Question 1:
+
+Why is Kafka consumer ignoring my “earliest” directive in the auto.offset.reset parameter?
+
+
+Answer :
+
+It's because auto.offset.reset is only applied if there are no committed offsets for the group..
+
+When there is no initial offset in Kafka or if the current offset does not exist any more on the server,
+then use this parameter to decide.
+
+However, if we want to restart from the beginning, then use either:
+
+use a new group name
+
+explicitly move the position of the consumer to the start of the partition using seekToBeginning():
+
+Note1:
+auto.offset.reset "latest" is the default, it starts consuming from the committed offset.
+If there are messages in the topic and no committed offset, then the "latest" will 
+commit the last message offset, but old messages are not displayed. Only new messages
+are displayed.
+
+
+
+
+

@@ -1,0 +1,184 @@
+Kafka Server configuration with OAuth Configuration:
+====================================================
+
+# Enable SASL and OAuth
+sasl.enabled.mechanisms=OAUTHBEARER
+sasl.mechanism.inter.broker.protocol=OAUTHBEARER
+security.inter.broker.protocol=SASL_PLAINTEXT
+
+# OAuth properties
+sasl.jaas.config=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+  oauth.token.endpoint="https://<oauth-provider>/token" \
+  oauth.client.id="<your-client-id>" \
+  oauth.client.secret="<your-client-secret>";
+# Optional properties
+# Set this to allow client connections with no SSL/TLS
+allow.everyone.if.no.acl.found=true
+
+
+Consumer/Producer code
+======================
+
+1. Kafka consumer Java code with SSL properties and configuration for setting up ACLs:
+
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+
+import java.util.Collections;
+import java.util.Properties;
+
+public class KafkaSSLConsumerWithACLs {
+
+    public static void main(String[] args) {
+        // Kafka broker address and port
+        String bootstrapServers = "your-kafka-broker:9093";
+        // Topic to consume messages from
+        String topic = "your-topic";
+
+        // SSL Properties
+        String truststoreLocation = "/path/to/truststore.jks";
+        String truststorePassword = "your-truststore-password";
+        String keystoreLocation = "/path/to/keystore.jks";
+        String keystorePassword = "your-keystore-password";
+        String keyPassword = "your-key-password";
+
+        // Consumer group ID for coordinating with other consumers
+        String groupId = "your-group-id";
+
+        // Create consumer properties
+        Properties properties = new Properties();
+
+        // Basic consumer properties
+        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+
+        // SSL properties
+        properties.put("security.protocol", "SSL");
+        properties.put("ssl.truststore.location", truststoreLocation);
+        properties.put("ssl.truststore.password", truststorePassword);
+        properties.put("ssl.keystore.location", keystoreLocation);
+        properties.put("ssl.keystore.password", keystorePassword);
+        properties.put("ssl.key.password", keyPassword);
+
+        // Other consumer properties
+        properties.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+        // Add ACLs for the consumer (assuming 'user' is the username to grant access)
+        properties.put("sasl.jaas.config", "org.apache.kafka.common.security.plain.PlainLoginModule required " +
+                "username=\"user\" " +
+                "password=\"password\";");
+        properties.put("sasl.mechanism", "PLAIN");
+
+        // Create the KafkaConsumer instance
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
+
+        // Subscribe to the topic
+        consumer.subscribe(Collections.singleton(topic));
+
+        // Start consuming records
+        try {
+            while (true) {
+                ConsumerRecords<String, String> records = consumer.poll(100);
+                records.forEach(record -> {
+                    System.out.println("Received message: " + record.value());
+                });
+                consumer.commitSync(); // Manually committing offsets (if auto-commit is disabled)
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            consumer.close();
+        }
+    }
+}
+
+
+2. Kafka consumer Java code with SSL properties and configuration for OAuth authentication using the Kafka
+client's OAuthBearerLoginModule:
+
+
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+
+import java.util.Collections;
+import java.util.Properties;
+
+public class KafkaSSLConsumerWithOAuth {
+
+    public static void main(String[] args) {
+        // Kafka broker address and port
+        String bootstrapServers = "your-kafka-broker:9093";
+        // Topic to consume messages from
+        String topic = "your-topic";
+
+        // SSL Properties
+        String truststoreLocation = "/path/to/truststore.jks";
+        String truststorePassword = "your-truststore-password";
+        String keystoreLocation = "/path/to/keystore.jks";
+        String keystorePassword = "your-keystore-password";
+        String keyPassword = "your-key-password";
+
+        // OAuth Properties
+        String oauthClientId = "your-oauth-client-id";
+        String oauthClientSecret = "your-oauth-client-secret";
+        String oauthAccessToken = "your-oauth-access-token";
+
+        // Consumer group ID for coordinating with other consumers
+        String groupId = "your-group-id";
+
+        // Create consumer properties
+        Properties properties = new Properties();
+
+        // Basic consumer properties
+        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+
+        // SSL properties
+        properties.put("security.protocol", "SSL");
+        properties.put("ssl.truststore.location", truststoreLocation);
+        properties.put("ssl.truststore.password", truststorePassword);
+        properties.put("ssl.keystore.location", keystoreLocation);
+        properties.put("ssl.keystore.password", keystorePassword);
+        properties.put("ssl.key.password", keyPassword);
+
+        // OAuth properties for authentication
+        properties.put("sasl.jaas.config",
+                "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required " +
+                "oauth.client.id=\"" + oauthClientId + "\" " +
+                "oauth.client.secret=\"" + oauthClientSecret + "\" " +
+                "oauth.access.token=\"" + oauthAccessToken + "\";");
+        properties.put("sasl.mechanism", "OAUTHBEARER");
+
+        // Other consumer properties
+        properties.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+        // Create the KafkaConsumer instance
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
+
+        // Subscribe to the topic
+        consumer.subscribe(Collections.singleton(topic));
+
+        // Start consuming records
+        try {
+            while (true) {
+                ConsumerRecords<String, String> records = consumer.poll(100);
+                records.forEach(record -> {
+                    System.out.println("Received message: " + record.value());
+                });
+                consumer.commitSync(); // Manually committing offsets (if auto-commit is disabled)
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            consumer.close();
+        }
+    }
+}

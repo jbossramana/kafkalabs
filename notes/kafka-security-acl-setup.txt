@@ -1,0 +1,137 @@
+1. create certificates
+
+VALIDITY=1825
+
+KAFKA_HOST=localhost
+SSLPASSPHRASE=kafka@123
+
+CERTIFICATE_INFO="CN=$KAFKA_HOST,OU=kafka,O=kafka,L=kafka,ST=kafka,C=XX"
+CA_INFO="/C=XX/ST=kafka/L=kafka/O=kafka/OU=kafka/CN=$KAFKA_HOST/"
+
+
+###Step 1: Generate a self-signed CA certificate and private key###
+
+openssl req -new -x509 -keyout ca-key -out ca-cert -days $VALIDITY -subj $CA_INFO -passout pass:$SSLPASSPHRASE
+
+### Step 2: Generate a keystore and private key for the Kafka server ###
+keytool -noprompt -keystore kafka.server.keystore.jks -alias $KAFKA_HOST -validity $VALIDITY -keyalg RSA -genkey -dname $CERTIFICATE_INFO -keypass $SSLPASSPHRASE -storepass $SSLPASSPHRASE
+
+###Step 3: Import the CA certificate into the Kafka server's truststore###
+keytool -noprompt -keystore kafka.server.truststore.jks -alias CARoot -import -file ca-cert -storepass $SSLPASSPHRASE
+
+###Step 4: Generate a certificate signing request (CSR) for the Kafka server###
+keytool -noprompt -keystore kafka.server.keystore.jks -alias $KAFKA_HOST -certreq -file cert-file-$KAFKA_HOST -storepass $SSLPASSPHRASE
+
+###Step 5: Sign the certificate with the CA###
+openssl x509 -req -CA ca-cert -CAkey ca-key -in cert-file-$KAFKA_HOST -out cert-signed-$KAFKA_HOST -days $VALIDITY -CAcreateserial -passin pass:$SSLPASSPHRASE
+
+###Step 6: Import the CA certificate into the Kafka server's keystore###
+keytool -noprompt -keystore kafka.server.keystore.jks -alias CARoot -import -file ca-cert -storepass $SSLPASSPHRASE
+
+###Step 7: Import the signed certificate into the Kafka server's keystore###
+keytool -noprompt -keystore kafka.server.keystore.jks -alias $KAFKA_HOST -import -file cert-signed-$KAFKA_HOST -storepass $SSLPASSPHRASE
+
+###Create client keystore and truststore###
+USERNAME=acladmin
+CLIENT_SSLPASSPHRASE=client@123
+CLIENT_CERTIFICATE_INFO="CN=$USERNAME,OU=kafka,O=kafka,L=kafka,ST=kafka,C=XX"
+
+###Step 1: Generate a keystore and private key for the Kafka client###
+keytool -noprompt -keystore kafka.client.keystore.jks -alias $USERNAME -validity $VALIDITY -keyalg RSA -genkey -dname $CLIENT_CERTIFICATE_INFO -keypass $CLIENT_SSLPASSPHRASE -storepass $CLIENT_SSLPASSPHRASE
+
+###Step 2: Import the CA certificate into the Kafka client's truststore###
+keytool -noprompt -keystore kafka.client.truststore.jks -alias CARoot -import -file ca-cert -storepass $CLIENT_SSLPASSPHRASE
+
+###Step 3: Generate a certificate signing request (CSR) for the Kafka client###
+keytool -noprompt -keystore kafka.client.keystore.jks -alias $USERNAME -certreq -file cert-file-client-$USERNAME -storepass $CLIENT_SSLPASSPHRASE
+
+###Step 4: Sign the certificate with the CA###
+openssl x509 -req -CA ca-cert -CAkey ca-key -in cert-file-client-$USERNAME -out cert-signed-client-$USERNAME -days $VALIDITY -CAcreateserial -passin pass:$SSLPASSPHRASE
+
+###Add client certificate to server truststore###
+keytool -keystore kafka.server.truststore.jks -alias $USERNAME -import -file cert-signed-client-$USERNAME -storepass $SSLPASSPHRASE
+
+
+2. add the below entries in server.properties
+
+listeners=SSL://:9093
+advertised.listeners=SSL://localhost:9093
+listener.security.protocol.map=SSL:SSL
+security.protocol=SSL
+security.inter.broker.protocol=SSL
+ssl.keystore.type=JKS
+ssl.keystore.location=/home/ubuntu/Desktop/kafka/ssl/kafka.server.keystore.jks
+ssl.keystore.password=kafka@123
+ssl.key.password=kafka@123
+ssl.truststore.type=JKS
+ssl.truststore.location=/home/ubuntu/Desktop/kafka/ssl/kafka.server.truststore.jks
+ssl.truststore.password=kafka@123
+authorizer.class.name=kafka.security.authorizer.AclAuthorizer
+allow.everyone.if.no.acl.found=false
+super.users=User:CN=localhost,OU=kafka,O=kafka,L=kafka,ST=kafka,C=XX;User:CN=acladmin,OU=kafka,O=kafka,L=kafka,ST=kafka,C=XX
+ssl.client.auth=required
+ssl.enabled.protocols=TLSv1.2,TLSv1.1,TLSv1
+
+
+3. create a file client-ssl-auth.properties  (create the file in kafka/bin )
+security.protocol=SSL 
+ssl.truststore.location=/home/ubuntu/Desktop/kafka/ssl/kafka.client.truststore.jks 
+ssl.truststore.password=client@123
+ssl.keystore.location=/home/ubuntu/Desktop/kafka/ssl/kafka.client.keystore.jks 
+ssl.keystore.password=client@123 
+ssl.key.password=client@123
+
+4. Start Zookeeper
+sh zookeeper-server-start.sh ../config/zookeeper.properties
+
+
+5. Start Kafka Server
+sh kafka-server-start.sh ../config/server.properties 
+
+6. run the below commands
+
+sh kafka-acls.sh --bootstrap-server localhost:9093 --command-config client-ssl-auth.properties --add --allow-principal \
+User:CN=acladmin,OU=kafka,O=kafka,L=kafka,ST=kafka,C=XX  --operation Create --topic acltest
+
+sh kafka-topics.sh --bootstrap-server localhost:9093   --command-config client-ssl-auth.properties --create --topic acltest
+
+
+sh kafka-acls.sh --bootstrap-server localhost:9093  --add  --allow-principal  User:CN=acladmin,OU=kafka,O=kafka,L=kafka,ST=kafka,C=XX \
+--consumer --topic acltest --group acl-consumer --command-config client-ssl-auth.properties
+
+sh kafka-acls.sh --bootstrap-server localhost:9093  --add  --allow-principal User:"CN=acladmin,OU=kafka,O=kafka,L=kafka,ST=kafka,C=XX" \
+--producer --topic acltest --group acl-consumer --command-config client-ssl-auth.properties
+
+sh kafka-console-producer.sh --bootstrap-server localhost:9093  --topic acltest   --producer.config client-ssl-auth.properties
+
+sh kafka-console-consumer.sh --bootstrap-server localhost:9093 --consumer.config  client-ssl-auth.properties   --topic acltest --from-beginning
+
+
+Reference :
+
+* For example, in the command --allow-principal User:"CN=acladmin,OU=kafka,O=kafka,L=kafka,ST=kafka,C=XX", the ACL rule allows the principal with the DN "CN=acladmin,OU=kafka,O=kafka,L=kafka,ST=kafka,C=XX" to perform certain actions. In this case, the DN represents the user's identity extracted from the SSL certificate.
+
+* ACL rules in Kafka can be grouped together under a common name or label. This allows for easier management and organization of ACLs, especially 
+when there are multiple rules to be defined.
+
+In the given command, --group acl-consumer is used to assign the ACL rule to a group named "acl-consumer". This group label can be used for 
+organizational purposes, grouping related ACL rules together. 
+
+To check the ACL groups defined in Apache Kafka, you can use the kafka-acls.sh script with the --list option. Here's the command:
+
+sh kafka-acls.sh --bootstrap-server localhost:9093 --list --command-config client-ssl-auth.properties
+
+
+To add two users to a Kafka ACL group:
+
+sh kafka-acls.sh --bootstrap-server localhost:9093 --add --allow-principal User:user1 --operation All --group my-group --command-config client-ssl-auth.properties
+
+sh kafka-acls.sh --bootstrap-server localhost:9093 --add --allow-principal User:user2 --operation All --group my-group --command-config client-ssl-auth.properties
+
+Create an ACL for a topic using the previously defined ACL group:
+
+sh kafka-acls.sh --bootstrap-server localhost:9093 --add --allow-principal User:my-group --operation All --topic my-topic --command-config client-ssl-auth.properties
+
+
+
+

@@ -1,0 +1,108 @@
+Create Multiple Kafka Brokers
+-----------------------------
+
+Step 1
+------
+
+➢ config/server1.properties
+# The id of the broker. This must be set to a unique integer for each broker.
+broker.id=1
+# The port the socket server listens on
+port=9091
+# A comma seperated list of directories under which to store log files
+log.dirs=/tmp/kafka-logs-1
+
+➢ config/server2.properties
+# The id of the broker. This must be set to a unique integer for each broker.
+broker.id=2
+# The port the socket server listens on
+port=9093
+# A comma seperated list of directories under which to store log files
+log.dirs=/tmp/kafka-logs-2
+
+➢ config/server3.properties
+# The id of the broker. This must be set to a unique integer for each broker.
+broker.id=3
+# The port the socket server listens on
+port=9094
+# A comma seperated list of directories under which to store log files
+log.dirs=/tmp/kafka-logs-3
+
+
+Step 2 : Start Multiple Brokers
+--------------------------------
+
+Broker1
+bin/kafka-server-start.bat ../../config/server1.properties
+
+Broker2
+bin/kafka-server-start.bat ../../config/server2.properties
+
+Broker3
+bin/kafka-server-start.bat ../../config/server3.properties
+
+
+Step 3 : Creating a Topic
+-------------------------
+
+bin/kafka-topics.bat --create --zookeeper localhost:2181 --replication-factor 3 --partitions 3 --topic failover
+
+Step 4: "Describe" the topic
+----------------------------
+
+bin/kafka-topics.bat --describe --zookeeper localhost:2181 --topic failover
+
+Step 5: Start Kafka Consumer that uses Replicated Topic
+-------------------------------------------------------
+
+kafka-console-consumer.sh --bootstrap-server localhost:9091,localhost:9092, localhost:9093 --topic failover --from-beginning
+
+
+Step 6 : Start Kafka Producer that uses Replicated Topic
+--------------------------------------------------------
+
+kafka-console-producer.sh --broker-list localhost:9091, localhost:9092,localhost:9093 --topic failover
+Note : send messages from producer and observe the consumer
+
+Step 7 : Start two more consumers
+---------------------------------
+
+$ kafka-console-consumer.sh --bootstrap-server localhost:9091,localhost:9092 --topic failover --from-beginning
+
+$ kafka-console-consumer.sh --bootstrap-server localhost:9091,localhost:9092 --topic failover --from-beginning
+
+Note : Stop all consumers
+
+
+Step 8 : Start three consumers with consumer group
+--------------------------------------------------
+
+$ kafka-console-consumer.sh --bootstrap-server localhost:9091,localhost:9092 --topic failover --group failover-group
+
+$ kafka-console-consumer.sh --bootstrap-server localhost:9091,localhost:9092 --topic failover --group failover-group
+
+$ kafka-console-consumer.sh --bootstrap-server localhost:9091,localhost:9092 --topic failover --group failover-group
+
+Note : Send few messages from the Kafka producer console. Notice that the messages are spread evenly
+among the consumers.
+
+Step 9: Describe the topic and see the leaders for the partitions.
+
+
+Step 10: Kill one server
+
+Step 11: Describe the topic and see the leader changes
+
+Step 12: Test the broker failover working or not
+
+Test the failover working, by sending two more messages from the producer console.
+Then notice if the consumers still get the messages.
+Notice that the messages are spread evenly among the remaining live consumers.
+
+
+
+
+
+
+
+

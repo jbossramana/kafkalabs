@@ -1,0 +1,7 @@
+./kafka-console-producer --bootstrap-server localhost:9092 --topic  order-topic --property "parse.key=true" --property "key.separator=:"
+
+./kafka-console-consumer  --bootstrap-server localhost:9092 --topic  order-topic --property print.key=true --property key.separator=":" --group og1   --consumer-property client.id=order-client --from-beginning
+
+
+./kafka-consumer-groups --bootstrap-server localhost:9092 --describe --group og1
+

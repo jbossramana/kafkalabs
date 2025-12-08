@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.5.5</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	
+	
+         <groupId>demo.kafka</groupId>
+	<artifactId>KafkaExamples</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>Kafla exaples parent</name>
+	<packaging>pom</packaging>
+	<description>Kafka and Confluent examples for developers</description>
+
+	<properties>
+		<java.version>21</java.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.kafka</groupId>
+			<artifactId>kafka-streams</artifactId>
+		</dependency>
+
+ 		<dependency>
+   			<groupId>ch.qos.logback</groupId>
+      			<artifactId>logback-classic</artifactId>
+      		    <scope>compile</scope>
+    		</dependency>
+    
+    		<dependency>
+      			<groupId>io.advantageous.boon</groupId>
+      			<artifactId>boon-json</artifactId>
+      			<version>0.6.6</version>
+      			<scope>compile</scope>
+    			</dependency>
+    
+     		<dependency>
+       			<groupId>com.fasterxml.jackson.core</groupId>
+       			<artifactId>jackson-databind</artifactId>
+     		</dependency>
+
+		<dependency>
+			<groupId>org.apache.kafka</groupId>
+			<artifactId>connect-json</artifactId>
+		</dependency>
+		
+
+
+ 		<dependency>
+      			<groupId>org.apache.avro</groupId>
+      			<artifactId>avro</artifactId>
+      			<version>1.9.0</version>
+    		</dependency>
+
+   		<dependency>
+      			<groupId>org.hsqldb</groupId>
+      			<artifactId>hsqldb</artifactId>
+      			
+    			<scope>compile</scope>
+    		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+  <groupId>jakarta.xml.bind</groupId>
+  <artifactId>jakarta.xml.bind-api</artifactId>
+  <version>4.0.2</version> <!-- or latest -->
+</dependency>
+	</dependencies>
+
+	<build>
+	     <plugins>
+			
+                 <plugin>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-maven-plugin</artifactId>
+		</plugin>
+	
+		 <plugin>
+		        <groupId>org.apache.avro</groupId>
+		        <artifactId>avro-maven-plugin</artifactId>
+        		<version>1.9.0</version>
+        		  <executions>
+          			<execution>
+          			  <phase>generate-sources</phase>
+           				 <goals>
+              				<goal>schema</goal>
+            				</goals>
+            			  <configuration>
+            			  <sourceDirectory>${project.basedir}/src/main/resources/avro/</sourceDirectory>
+            			  <outputDirectory>${project.build.directory}/generated</outputDirectory>
+            			  </configuration>
+          			</execution>
+        		</executions>
+      		</plugin>
+	    </plugins>
+
+ <pluginManagement>
+    	<plugins>
+    		<!--This plugin's configuration is used to store Eclipse m2e settings only. 
+    		It has no influence on the Maven build itself.-->
+    		
+    		<plugin>
+    			<groupId>org.eclipse.m2e</groupId>
+    			<artifactId>lifecycle-mapping</artifactId>
+    			<version>1.0.0</version>
+    			<configuration>
+    				<lifecycleMappingMetadata>
+    					<pluginExecutions>
+    						<pluginExecution>
+    							<pluginExecutionFilter>
+    								<groupId>org.apache.avro</groupId>
+    								<artifactId>
+    									avro-maven-plugin
+    								</artifactId>
+    								<versionRange>
+    									[1.9.0,)
+    								</versionRange>
+    								<goals>
+    									<goal>schema</goal>
+    								</goals>
+    							</pluginExecutionFilter>
+    							<action>
+    								<ignore></ignore>
+    							</action>
+    						</pluginExecution>
+    					</pluginExecutions>
+    				</lifecycleMappingMetadata>
+    			</configuration>
+    		</plugin>
+    	</plugins>
+    </pluginManagement>
+
+	</build>
+
+</project>
+

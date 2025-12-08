@@ -1,0 +1,3 @@
+   props.put(ProducerConfig.ACKS_CONFIG, "all");
+        props.put(ProducerConfig.RETRIES_CONFIG,100);
+        props.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG,5000);

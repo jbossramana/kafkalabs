@@ -1,0 +1,22 @@
+java class [use stream api]
+|_ consumer API -> input_topic
+|_ producer API -> output_topic
+
+
+java class  [use hdfs source connector]
+|_ hdfs api -> read from hdfs
+|_ producer api -> write to topic
+
+
+java class [use jdbc sink connector]
+|_ consumer api -> read from kafka topic
+|_ jdbc api -> write to oracle db
+
+
+java class [producer api]
+|_ write to kafka topic 
+
+
+
+java class  [consumer api]
+|_ read from kafka topic

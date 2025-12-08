@@ -1,0 +1,46 @@
+public class ProducerRecord<K,V>
+extends java.lang.Object
+
+>> A key/value pair to be sent to Kafka. This consists of a topic name to which the record is being sent, 
+an optional partition number, and an optional key and value.
+
+>> If a valid partition number is specified that partition will be used when sending the record. 
+If no partition is specified but a key is present a partition will be chosen using a hash of the key. 
+If neither key nor partition is present a partition will be assigned  in a round-robin fashion.
+
+>> The record also has an associated timestamp. If the user did not provide a timestamp, the producer will 
+stamp the record with its current time. The timestamp eventually used by Kafka depends on the timestamp type 
+configured for the topic.
+
+>> If the topic is configured to use CreateTime, the timestamp in the producer record will be used by the broker.
+(By default message.timestamp.type=CreateTime)
+
+>> If the topic is configured to use LogAppendTime, the timestamp in the producer record will be overwritten 
+by the broker with the broker local time when it appends the message to its log.
+
+(kafka-configs --alter --entity-name my-topic  --entity-type topics --add-config 
+ message.timestamp.type=LogAppendTime --zookeeper localhost:2181)
+
+>> In either of the cases above, the timestamp that has actually been used will be returned to user in RecordMetadata
+
+
+Constructor and Description
+===========================
+
+ProducerRecord(java.lang.String topic, java.lang.Integer partition, K key, V value)
+Creates a record to be sent to a specified topic and partition
+
+ProducerRecord(java.lang.String topic, java.lang.Integer partition, K key, V value, java.lang.Iterable<Header> headers)
+Creates a record to be sent to a specified topic and partition
+
+ProducerRecord(java.lang.String topic, java.lang.Integer partition, java.lang.Long timestamp, K key, V value)
+Creates a record with a specified timestamp to be sent to a specified topic and partition
+
+ProducerRecord(java.lang.String topic, java.lang.Integer partition, java.lang.Long timestamp, K key, V value, java.lang.Iterable<Header> headers)
+Creates a record with a specified timestamp to be sent to a specified topic and partition
+
+ProducerRecord(java.lang.String topic, K key, V value)
+Create a record to be sent to Kafka
+
+ProducerRecord(java.lang.String topic, V value)
+Create a record with no key
