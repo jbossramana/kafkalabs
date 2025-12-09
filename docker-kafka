@@ -1,0 +1,59 @@
+# 1. Pull the Kafka 4.1.1 image
+docker pull apache/kafka:4.1.1
+
+# 2. Run the kafka server
+docker run -d ^
+  --name kafka ^
+  -p 9092:9092 ^
+  -e KAFKA_NODE_ID=1 ^
+  -e KAFKA_PROCESS_ROLES=broker,controller ^
+  -e KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093 ^
+  -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 ^
+  -e KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093 ^
+  -e KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER ^
+  -v kafka_data:/var/lib/kafka/data ^
+  apache/kafka:4.1.1
+
+# 3. To check kafka logs
+docker logs -f kafka
+
+# 4. To inspect kafka folder inside the container
+docker exec -it kafka bash  # replace with kafka with container name
+<container-name>cd /opt/kafka
+Note: you will find all the folders of kafka
+
+# 5. To create a topic
+<container-name>sh kafka-topics.sh  --bootstrap-server localhost:9092 --create --topic first-topic --parttions 3 --replication-factor 1
+
+# Note1 : 
+The data logs are created in /tmp/kafka-logs director
+  
+# Note2: 
+In docker run command we passed data volume as:
+-v kafka_data:/var/lib/kafka/data
+  
+But the Kafka container is writing logs to /tmp/kafka-logs instead of /var/lib/kafka/data.
+  
+The apache/kafka:4.1.1 Docker image (KRaft mode) uses /tmp/kafka-logs as the default log directory unless you explicitly override it with KAFKA_LOG_DIRS.
+•	log.dirs=/tmp/kafka-logs in server.properties
+•	Mounted volume /var/lib/kafka/data is never used unless you set KAFKA_LOG_DIRS=/var/lib/kafka/data
+
+# Note3:
+/etc — Configuration files
+      Purpose: Stores configuration files for system programs and services.
+
+/opt — Optional / Third-party software
+      Purpose: Contains optional or third-party applications that are not part of the base OS.
+      Typical usage:
+          /opt/kafka/
+              bin/        → executables
+              config/     → configuration files
+              libs/       → libraries
+              logs/       → internal logs (sometimes)
+
+
+/var — Variable data files
+      Purpose: Stores variable or persistent data created by programs while they run.
+      Contents: Logs, spool files, caches, runtime databases.
+
+
