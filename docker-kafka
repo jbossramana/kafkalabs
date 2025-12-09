@@ -1,5 +1,8 @@
 # 1. Pull the Kafka 4.1.1 image
+
 docker pull apache/kafka:4.1.1
+(or)
+docker pull apache/kafka-native:4.1.1
 
 # 2. Run the kafka server
 docker run -d ^
@@ -56,4 +59,80 @@ The apache/kafka:4.1.1 Docker image (KRaft mode) uses /tmp/kafka-logs as the def
       Purpose: Stores variable or persistent data created by programs while they run.
       Contents: Logs, spool files, caches, runtime databases.
 
+
+
+
+=========================================================================================================================
+
+1️⃣ apache/kafka:4.1.1
+
+Official Apache Kafka image.
+
+Based on Alpine / Debian Linux with OpenJDK included.
+
+Designed to run Kafka in a container, including KRaft mode.
+
+Includes basic runtime only:
+
+Kafka server
+
+Minimal scripts for startup
+
+Some CLI tools may not be included (like kafka-storage in 4.x)
+
+Recommended for production if you don’t need extra tools in the container.
+
+Uses classic JVM-based Kafka runtime.
+
+Pros:
+
+Smaller image, maintained by Apache.
+
+Simple to run in Docker.
+
+Cons:
+
+Some CLI tools may be missing.
+
+Default KRaft storage may go to /tmp/kafka-logs.
+
+Might require environment variables for volume mapping, storage formatting.
+
+
+2️⃣ apache/kafka-native:4.1.1
+
+“Native” build of Kafka 4.x using GraalVM native-image.
+
+Kafka server is compiled to a native binary, not JVM.
+
+Faster startup, smaller runtime memory usage.
+
+Intended for cloud-native / containerized environments.
+
+CLI tools are usually included.
+
+Still supports KRaft mode.
+
+
+Pros:
+
+Faster startup.
+
+Lower memory footprint (no JVM warm-up).
+
+
+
+Cons:
+
+Some plugins or Java-based libraries may not work (rare).
+
+Less battle-tested than standard JVM Kafka in some environments.
+
+Note:
+
+Kafka source code (Java/Scala) → compiled into JVM bytecode → fed into GraalVM native-image → produces a native Linux binary.
+
+The Docker image then just contains this binary + necessary runtime libraries.
+
+The image is “built from source code into a binary” in the sense that you don’t need Java to run it.
 
