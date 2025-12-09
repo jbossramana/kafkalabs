@@ -63,6 +63,8 @@ The apache/kafka:4.1.1 Docker image (KRaft mode) uses /tmp/kafka-logs as the def
 
 
 =========================================================================================================================
+To get details: 
+docker inspect apache/kafka:4.1.1  or docker inspect apache/kafka-native:4.1.1
 
 1️⃣ apache/kafka:4.1.1
 
