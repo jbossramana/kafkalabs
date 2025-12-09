@@ -59,10 +59,51 @@ The apache/kafka:4.1.1 Docker image (KRaft mode) uses /tmp/kafka-logs as the def
       Purpose: Stores variable or persistent data created by programs while they run.
       Contents: Logs, spool files, caches, runtime databases.
 
+=========================================================================================================================
+
+Controller-only container:
+     The controller is responsible for metadata management. It does not handle client traffic directly.
+
+docker run -d ^
+  --name kafka-controller ^
+  -p 9093:9093 ^
+  -e KAFKA_NODE_ID=1 ^
+  -e KAFKA_PROCESS_ROLES=controller ^
+  -e KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER ^
+  -e KAFKA_LISTENERS=CONTROLLER://:9093 ^
+  -e KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093 ^
+  -e KAFKA_LOG_DIRS=/var/lib/kafka/controller-data ^
+  -v kafka_controller_data:/var/lib/kafka/controller-data ^
+  apache/kafka:4.1.1
 
 
+Broker-only container:
+    The broker handles client traffic (producers/consumers). It connects to the controller for metadata.
+
+docker run -d `
+  --name kafka-broker ^
+  -p 9092:9092 ^
+  -e KAFKA_NODE_ID=2 ^
+  -e KAFKA_PROCESS_ROLES=broker ^
+  -e KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9094 ^
+  -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 ^
+  -e KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093 ^
+  -e KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER ^
+  -e KAFKA_LOG_DIRS=/var/lib/kafka/broker-data ^
+  -v kafka_broker_data:/var/lib/kafka/broker-data ^
+  apache/kafka:4.1.1
+
+Environment variables (-e)
+Variable	                                  Purpose
+KAFKA_NODE_ID=1	                             Unique node ID for this Kafka instance
+KAFKA_PROCESS_ROLES=broker,controller	       Run both roles in one container (KRaft mode)
+KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093	Kafka listens for clients on 9092 and internal controller communication on 9093
+KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092	Host/port advertised to clients outside container
+KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093	Controller quorum info (single-node setup)
+KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER	Names the internal controller listener
 
 =========================================================================================================================
+
 To get details: 
 docker inspect apache/kafka:4.1.1  or docker inspect apache/kafka-native:4.1.1
 
