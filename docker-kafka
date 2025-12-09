@@ -61,36 +61,44 @@ The apache/kafka:4.1.1 Docker image (KRaft mode) uses /tmp/kafka-logs as the def
 
 =========================================================================================================================
 
+*** Use a user-defined network and container names
+Create a Docker network :
+docker network create kafka-net
+
 Controller-only container:
      The controller is responsible for metadata management. It does not handle client traffic directly.
 
 docker run -d ^
   --name kafka-controller ^
+   --network kafka-net ^
   -p 9093:9093 ^
   -e KAFKA_NODE_ID=1 ^
   -e KAFKA_PROCESS_ROLES=controller ^
   -e KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER ^
   -e KAFKA_LISTENERS=CONTROLLER://:9093 ^
-  -e KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093 ^
+  -e KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka-controller:9093 ^
   -e KAFKA_LOG_DIRS=/var/lib/kafka/controller-data ^
   -v kafka_controller_data:/var/lib/kafka/controller-data ^
+   --user root ^
   apache/kafka:4.1.1
 
 
 Broker-only container:
     The broker handles client traffic (producers/consumers). It connects to the controller for metadata.
 
-docker run -d `
+docker run -d ^
   --name kafka-broker ^
+  --network kafka-net ^
   -p 9092:9092 ^
   -e KAFKA_NODE_ID=2 ^
   -e KAFKA_PROCESS_ROLES=broker ^
-  -e KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9094 ^
+  -e KAFKA_LISTENERS=PLAINTEXT://:9092 ^
   -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 ^
-  -e KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093 ^
+  -e KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka-controller:9093 ^
   -e KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER ^
   -e KAFKA_LOG_DIRS=/var/lib/kafka/broker-data ^
   -v kafka_broker_data:/var/lib/kafka/broker-data ^
+ --user root ^
   apache/kafka:4.1.1
 
 Environment variables (-e)
