@@ -1,0 +1,63 @@
+1. Install python software and select the path option
+python-3.10.3-amd64.exe
+
+2. Install kafka-python module
+pip install kafka-python
+
+3. Install pycharm IDE
+pycharm-community-2021.3.3
+
+4. In thie IDE -> select setings -> Python interpreter
+
+5. Create a new project
+
+producer.py
+===========
+
+# Import KafkaProducer from Kafka library
+from kafka import KafkaProducer
+
+# Define server with port
+bootstrap_servers = ['localhost:9092']
+
+# Define topic name where the message will publish
+
+
+# Initialize producer variable
+producer = KafkaProducer(bootstrap_servers=bootstrap_servers)
+
+for _ in range(25):
+    producer.send('day1-py', b'some_message_bytes')
+
+# Print message
+print("Message Sent")
+
+
+consumer.py
+===========
+
+# Import KafkaConsumer from Kafka library
+from kafka import KafkaConsumer
+
+# Import sys module
+import sys
+
+# Define server with port
+bootstrap_servers = ['localhost:9092']
+
+# Define topic name from where the message will recieve
+topicName = 'day1-py'
+
+# Initialize consumer variable
+consumer = KafkaConsumer(bootstrap_servers=bootstrap_servers, auto_offset_reset='earliest')
+
+consumer.subscribe(topicName)
+consumer.poll()
+
+# Read and print message from consumer
+for msg in consumer:
+    print("Topic Name=%s,Message=%s" % (msg.topic, msg.value))
+
+
+
+Ref:  https://kafka-python.readthedocs.io/en/master/

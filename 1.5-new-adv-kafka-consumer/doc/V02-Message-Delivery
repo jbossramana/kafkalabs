@@ -1,0 +1,59 @@
+Message Delivery Semantics
+==========================
+
+There are three message delivery semantics: at most once, at least once and exactly once.
+
+> At most once is messages may be lost but never redelivered. 
+
+> At least once is messages are never lost but may be redelivered. 
+
+> Exactly once is each message is delivered once and only once. Exactly once is preferred but more expensive, and requires more bookkeeping for the producer and consumer.
+
+
+
+At most once
+------------
+
+To configure this type of consumer,
+
+Set ‘enable.auto.commit’ to true
+
+Set ‘auto.commit.interval.ms’ to a lower timeframe.  (ex: 100 )
+
+And do not make call to consumer.commitSync(); 
+
+
+At least once
+-------------
+
+To configure this type of consumer:
+
+Set ‘enable.auto.commit’ to true
+
+Set ‘auto.commit.interval.ms’ to a higher number.(ex: 999999999999)
+
+Consumer should then take control of the message offset commits to Kafka by making the following call
+consumer.commitSync()
+
+
+
+Exactly Once 
+------------
+
+To implement Exactly-Once semantics, we have to control and store the offsets for the partitions with the 
+output of your consumer operation.
+
+We then have to read the stored positions when your consumer is assigned partitions to consume.
+
+Remember that consumers do not have to use Kafka's built-in offset storage, and to implement ***exactly once 
+messaging semantics***, we will need to read the offsets from stable storage (jdbc)
+
+Set enable.auto.commit = false
+
+Do not make call to consumer.commitSync(); after processing message.
+
+
+
+
+
+

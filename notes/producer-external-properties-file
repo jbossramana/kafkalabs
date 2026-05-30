@@ -1,0 +1,25 @@
+In this example, the list of bootstrap servers is read from a file named producer.properties. The contents of the file might look like:
+
+bootstrap.servers=kafka1.example.com:9092,kafka2.example.com:9092,kafka3.example.com:9092
+
+
+Here is an example of how to read the list of bootstrap servers from a properties file:
+
+import org.apache.kafka.clients.producer.*;
+import java.util.Properties;
+import java.io.FileInputStream;
+import java.io.IOException;
+
+public class MyProducer {
+  public static void main(String[] args) throws IOException {
+    Properties props = new Properties();
+    FileInputStream input = new FileInputStream("producer.properties");
+    props.load(input);
+    
+    // create a new KafkaProducer with the configured properties
+    KafkaProducer<String, String> producer = new KafkaProducer<>(props);
+    
+    // use the producer to send messages to Kafka
+    // ...
+  }
+}

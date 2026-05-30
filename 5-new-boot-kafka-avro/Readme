@@ -1,0 +1,11 @@
+Postman -> Post -> http://localhost:8080/avro/send
+
+
+JSON Request:
+
+{
+	"name": "rushi",
+	"favorite_number":10 ,
+	"favorite_color": 111
+}
+

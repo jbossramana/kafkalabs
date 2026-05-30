@@ -1,0 +1,17 @@
+Both a KTable and a changelog are required, even when there is a state store involved:
+
+State Store for Local Storage:
+The state store is used to maintain the local state of the application. For example, when you perform a count operation, the state 
+store keeps track of the current counts of each word. This local state is essential for efficiently processing incoming records 
+without the need to recompute the entire state from scratch.
+
+Changelog for Fault Tolerance and Rebalancing:
+The changelog topic is a Kafka topic where all updates to the state store are written as a log of changes (deltas). This serves several 
+important purposes:
+
+Fault Tolerance: If an application instance crashes, the state can be restored by replaying the changelog topic. This ensures that no data is 
+lost and the state can be rebuilt exactly as it was before the crash.
+
+Rebalancing: In a distributed system, tasks might be reassigned to different instances (e.g., due to scaling out or in, or instance failures). 
+The changelog allows the new instance to reconstruct the state store by consuming the changelog topic, ensuring consistency across the distributed system.
+Backup: The changelog acts as a backup of the state store. If the state store on disk gets corrupted, it can be reconstructed from the changelog topic.

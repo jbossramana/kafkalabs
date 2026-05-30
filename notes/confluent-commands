@@ -1,0 +1,52 @@
+
+To install Confluent server:
+
+1. download confluent server (local - zip/tar)
+
+2. To install concluent CLI tool:
+curl -L https://cnfl.io/cli | sh -s -- -b /<path-to-directory>/bin
+* Run the command  in confluent/bin directory
+
+3. in /etc/profile. add the below entries
+export CONFLUENT_HOME=/home/ubuntu/Desktop/kafka/confluent-7.0.1
+export CONFLUENT_CURRENT="/home/ubuntu/Desktop/kafka/logs"
+
+4. to start confluent server
+./confluent local services start
+
+
+1. To check the status of the confluent server
+./confluent  local services status
+
+2. To start the confluent server
+./confluent  local services start
+
+3. To access webconsole
+http://localhost:9021/
+
+
+
+Connector Architecture
+======================
+To get File Source/Sink Connector
+Copy connect-file-7.0.1-ce.jar from  confluent-7.0.1/share/filestream-connectors to 
+/home/ubuntu/Desktop/kafka/confluent-7.0.1/share/java/kafka
+
+
+Ports
+=====
+
+By default the Confluent Platform components use these ports to communicate. These ports must be open.
+
+Component	                            Port
+Kafka brokers (plain text)	          9092
+Kafka inter-broker communication    	9091
+Confluent Control Center	            9021
+Kafka Connect REST API	              8083
+ksqlDB Server REST API	              8088
+Metadata Service (MDS) if enabled	    8090
+REST Proxy	                          8082
+Schema Registry REST API	            8081
+ZooKeeper	                            2181, 2888, 3888
+
+

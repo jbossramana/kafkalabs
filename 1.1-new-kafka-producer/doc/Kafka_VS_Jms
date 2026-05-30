@@ -1,0 +1,33 @@
+
+Why Kafka?
+==========
+
+Kafka often gets used in the real-time streaming data architectures to provide real-time analytics. 
+
+Since Kafka is a fast, scalable, durable, and fault-tolerant publish-subscribe messaging system, 
+
+Kafka is used in use cases where JMS, RabbitMQ, and AMQP may not even be considered due to volume
+and responsiveness.
+
+Kafka has higher throughput, reliability and replication characteristics which make it applicable for
+things like tracking service calls (tracks every call) or track IOT sensors  data where a traditional 
+MOM might not be considered.
+
+
+Kafka vs JMS
+============
+
+
+Kafka is like a queue for consumer groups. Basically, Kafka is a queue system per consumer group 
+so it can do  load balancing like JMS, RabbitMQ, etc.
+
+Kafka is like topics in JMS for multiple consumer groups. Kafka has topics and producers publish
+to the topics and the subscribers (Consumer Groups) read from the topics.
+
+Kafka offers consumer groups, which is a named group of consumers. A consumer group acts as a subscription. 
+
+Kafka broadcast to multiple consumer groups using a single queue as each consumer group tracks 
+its own offset  into the log. 
+
+MOM is message oriented middleware, and includes all JMS implementors.
+

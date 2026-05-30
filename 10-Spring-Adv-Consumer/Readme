@@ -1,0 +1,78 @@
+1. Batch Consumer
+
+factory.setBatchListener(true)
+
+Receive multiple records together.
+
+Example
+List<ConsumerRecord<...>>
+
+instead of one message.
+
+Benefits: higher throughput, fewer polls, better performance
+
+2. Manual Offset Commit
+
+enable-auto-commit: false
+
+and:
+
+acknowledgment.acknowledge();
+
+Commit offsets ONLY after successful processing.
+
+Benefits : no message loss, precise control, reliable processing
+
+3. Retry Mechanism
+
+new FixedBackOff(2000L, 3)
+
+Automatically retry temporary failures.
+
+Benefits : temporary recovery, avoids unnecessary failures, improves resilience
+
+4. Dead Letter Topic (DLT)
+
+orders.DLT
+
+Store permanently failed messages.
+
+Benefits: prevents infinite retry loops, isolates bad messages, supports manual investigation
+
+5. DLT Consumer
+
+@KafkaListener(topics = "orders.DLT")
+
+Process failed messages separately.
+
+Real Uses: alerting, auditing, DB storage, reprocessing
+
+6. Without Concurrency
+
+You would create:
+
+Consumer-1 → Partition 0
+Consumer-2 → Partition 1
+Consumer-3 → Partition 2
+
+Meaning:
+
+3 separate consumer instances
+more code/configuration
+more deployment complexity
+
+With Concurrency
+===============
+
+You create:
+
+factory.setConcurrency(3);
+
+inside ONE application.
+
+Spring internally creates:
+
+3 consumer threads
+
+automatically.
+

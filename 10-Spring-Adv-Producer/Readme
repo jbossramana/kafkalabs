@@ -1,0 +1,79 @@
+POST -> http://localhost:8080/orders
+
+TEST SUCCESS MESSAGE
+====================
+{
+  "orderId": "ORD-1001",
+  "customerName": "Venkat",
+  "product": "Laptop",
+  "amount": 2000
+}
+
+TEST FAILURE MESSAGE
+====================
+
+{
+  "orderId": "ORD-9999",
+  "customerName": "Venkat",
+  "product": "MacBook",
+  "amount": 90000
+}
+
+
+1. Idempotent Producer
+
+enable.idempotence: true
+
+Avoid duplicate messages during retries.
+
+2. Async Publishing
+
+kafkaTemplate.send(...).whenComplete(...)
+
+Non-blocking message publishing.
+
+Producer does NOT wait for Kafka response.
+
+Benefits: high throughput, better performance, scalable publishing
+
+3. Message Keys
+
+.setHeader(KafkaHeaders.KEY, orderId)
+
+Ensure same key goes to same partition.
+
+4. Compression
+
+compression-type: snappy
+
+Reduce network traffic.
+
+Benefits: faster transfer, lower bandwidth, better throughput
+
+5. Batching
+
+batch-size: 32768
+linger.ms: 10
+
+Producer groups multiple messages into one batch.
+
+Benefits: fewer network calls, better throughput, improved performance
+
+6. Retries
+
+retries: 5
+
+Retry temporary failures automatically.
+
+
+7. Acknowledgments
+
+acks: all
+
+Strong durability guarantee.
+
+Kafka waits until replicas confirm write.
+
+Benefit: Avoid message loss.
+
+

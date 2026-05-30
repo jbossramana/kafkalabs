@@ -1,0 +1,11 @@
+Create topics
+-------------
+
+kafka-topics.sh --create  --replication-factor 1 --partitions 3 --topic first-topic --zookeeper  localhost:2181
+
+
+List created topics
+-------------------
+
+kafka/bin/kafka-topics.sh --list --zookeeper localhost:2181
+    

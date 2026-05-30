@@ -1,0 +1,12 @@
+1. Create a topic
+
+./kafka-topics --create --bootstrap-server localhost:9092  --topic simpleTopic --replication-factor 1 --partitions 1 
+
+
+2. Hit the url as follows- http://localhost:8080/kafka/producer?message=test 
+
+
+3. Observe the output in the console
+
+
+

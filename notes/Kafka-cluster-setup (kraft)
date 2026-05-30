@@ -1,0 +1,166 @@
+
+1. copy server-1..3 files into config folder
+
+2. Create a cluster-id
+
+KAFKA_CLUSTER_ID="$(sh kafka-storage.sh random-uuid)"
+echo $KAFKA_CLUSTER_ID
+
+
+3. Format the storage directory (formatting storage,initializing cluster metadata,wiping/resetting broker data)
+sh kafka-storage.sh format -t $KAFKA_CLUSTER_ID -c ../config/server-1.properties
+sh kafka-storage.sh format -t $KAFKA_CLUSTER_ID -c ../config/server-2.properties
+sh kafka-storage.sh format -t $KAFKA_CLUSTER_ID -c ../config/server-3.properties
+
+4. Start 3 kafka servers
+sh kafka-server-start.sh ../config/server-1.properties
+sh kafka-server-start.sh ../config/server-2.properties
+sh kafka-server-start.sh ../config/server-3.properties
+
+5. To get metadata information
+
+sh kafka-metadata-quorum.sh --bootstrap-server localhost:9092  describe --status
+
+sh kafka-metadata-quorum.sh --bootstrap-server localhost:9092  describe  --replication
+
+sh kafka-metadata-quorum.sh --bootstrap-server localhost:9092  describe  --replication --human-readable 
+
+sh kafka-broker-api-versions.sh --bootstrap-server localhost:9092
+
+
+sh kafka-cluster.sh cluster-id  --bootstrap-server localhost:9092 
+
+6. To create a topic
+
+sh kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 3 --partitions 3 --topic failover
+
+7. To describe a topic
+
+sh kafka-topics.sh --describe --bootstrap-server localhost:9092 --topic failover
+
+8. Dynamically changing the configuration
+
+sh kafka-configs.sh --bootstrap-server localhost:9092 --entity-type topics --entity-name failover --add-config min.insync.replicas=3 --alter
+
+server-1.properties
+===================
+
+process.roles=broker,controller
+node.id=1
+
+controller.quorum.voters=1@localhost:9093,2@localhost:9095,3@localhost:9097
+
+listeners=PLAINTEXT://localhost:9092,CONTROLLER://localhost:9093
+advertised.listeners=PLAINTEXT://localhost:9092
+
+inter.broker.listener.name=PLAINTEXT
+controller.listener.names=CONTROLLER
+
+listener.security.protocol.map=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+
+num.network.threads=3
+num.io.threads=8
+socket.send.buffer.bytes=102400
+socket.receive.buffer.bytes=102400
+socket.request.max.bytes=104857600
+
+log.dirs=/tmp/kraft-combined-logs-1
+
+num.partitions=3
+num.recovery.threads.per.data.dir=1
+
+offsets.topic.replication.factor=3
+transaction.state.log.replication.factor=3
+transaction.state.log.min.isr=2
+
+log.retention.hours=168
+log.segment.bytes=1073741824
+log.retention.check.interval.ms=300000
+
+group.initial.rebalance.delay.ms=0
+
+server-2.properties
+===================
+
+process.roles=broker,controller
+node.id=2
+
+controller.quorum.voters=1@localhost:9093,2@localhost:9095,3@localhost:9097
+
+listeners=PLAINTEXT://localhost:9094,CONTROLLER://localhost:9095
+advertised.listeners=PLAINTEXT://localhost:9094
+
+inter.broker.listener.name=PLAINTEXT
+controller.listener.names=CONTROLLER
+
+listener.security.protocol.map=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+
+num.network.threads=3
+num.io.threads=8
+socket.send.buffer.bytes=102400
+socket.receive.buffer.bytes=102400
+socket.request.max.bytes=104857600
+
+log.dirs=/tmp/kraft-combined-logs-2
+
+num.partitions=3
+num.recovery.threads.per.data.dir=1
+
+offsets.topic.replication.factor=3
+transaction.state.log.replication.factor=3
+transaction.state.log.min.isr=2
+
+log.retention.hours=168
+log.segment.bytes=1073741824
+log.retention.check.interval.ms=300000
+
+group.initial.rebalance.delay.ms=0
+
+
+server-3.properties
+===================
+
+process.roles=broker,controller
+node.id=3
+
+controller.quorum.voters=1@localhost:9093,2@localhost:9095,3@localhost:9097
+
+listeners=PLAINTEXT://localhost:9096,CONTROLLER://localhost:9097
+advertised.listeners=PLAINTEXT://localhost:9096
+
+inter.broker.listener.name=PLAINTEXT
+controller.listener.names=CONTROLLER
+
+listener.security.protocol.map=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+
+num.network.threads=3
+num.io.threads=8
+socket.send.buffer.bytes=102400
+socket.receive.buffer.bytes=102400
+socket.request.max.bytes=104857600
+
+log.dirs=/tmp/kraft-combined-logs-3
+
+num.partitions=3
+num.recovery.threads.per.data.dir=1
+
+offsets.topic.replication.factor=3
+transaction.state.log.replication.factor=3
+transaction.state.log.min.isr=2
+
+log.retention.hours=168
+log.segment.bytes=1073741824
+log.retention.check.interval.ms=300000
+
+group.initial.rebalance.delay.ms=0
+
+
+
+
+
+
+
+
+
+
+

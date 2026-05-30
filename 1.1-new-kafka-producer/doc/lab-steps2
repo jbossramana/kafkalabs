@@ -1,0 +1,39 @@
+Topic alter and describe
+------------------------
+1. Run the below command, and see the available/REQUIRED options
+
+kafka-topics
+
+Note :This is the document for kafka cli commands
+
+2. Create a topic without partitions
+
+kafka-topics --create --zookeeper 127.0.0.1:2181 --topic test_topic
+
+3. Create a topic without replication
+
+kafka-topics --create --zookeeper 127.0.0.1:2181 --topic test_topic –partitions 1
+
+4. Create a topic with partitions and replication
+
+kafka-topics --create --zookeeper 127.0.0.1:2181 --topic test_topic –partitions 1 --replication-factor 1
+
+5. List all the available topic’s
+
+kafka-topics.sh --list --zookeeper localhost:2181
+
+6. Describe the topic
+
+kafka-topics --zookeeper localhost:2181 --topic test_topic –describe
+
+7. Alter a topic (with partitions 2)
+
+kafka-topics --zookeeper localhost:2181 --alter --topic test_topic --partitions 2
+
+8. Alter a topic (with replication-factor 2)
+
+kafka-topics --zookeeper localhost:2181 --alter --topic test_topic –partitions 2 --replication-factor 2
+
+9.Onceagain, Describe the topic
+
+kafka-topics --zookeeper localhost:2181 --topic test_topic –describe

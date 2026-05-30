@@ -1,0 +1,25 @@
+{
+	"name": "file-sink-mysql-foobar",
+	"config": {
+		"_comment": "Stream data to file from Kafka topic using FileStreamSinkConnector",
+		"connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+		  
+		"_comment": "Deserialise the message key data from Avro",
+		"key.converter": "io.confluent.connect.avro.AvroConverter",
+		  
+		"_comment": "Since the data is in Avro, we need to provide the schema registry in order to look up the schema of the message",
+		"key.converter.schema.registry.url": "http://localhost:8081",
+		  
+		"_comment": "As above, but for the value of the message",
+		"value.converter": "io.confluent.connect.avro.AvroConverter",
+		"value.converter.schema.registry.url": "http://localhost:8081",
+		  
+		"_comment": "--- File specific configuration here ---",
+		"_comment": "Filename to which data should be written",
+		"file": "kafka-mysql-foobar.txt",
+		  
+		"_comment": "Which topic(s) to write data from",
+		"topics": "mysql-foobar"
+	}
+}
+

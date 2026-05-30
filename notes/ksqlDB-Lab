@@ -1,0 +1,276 @@
+What is ksqlDB?
+
+ksqlDB is a streaming SQL engine built on top of Apache Kafka that allows you to process real-time data using 
+SQL-like queries. It enables developers to build stream processing applications without writing traditional Java 
+code or using complex frameworks like Apache Flink or Apache Storm.
+
+It was developed by Confluent, the creators of Apache Kafka.
+
+Streams and Tables
+==================
+
+Stream: An append-only sequence of events (e.g., new customer orders).
+
+Table: A stateful view of the latest value per key (e.g., customer profiles).
+
+This aligns with the event streaming model where:
+
+# A stream is a log of events.
+# A table is a materialized view built from that stream.
+
+
+Push Queries (Streaming / Continuous)
+======================================
+Always running: Continuously emit results as new events arrive.
+
+Work on streams or tables.
+Like subscribing to changes.
+
+SELECT item, COUNT(*) FROM orders_stream
+WINDOW TUMBLING (SIZE 5 MINUTES)
+GROUP BY item
+EMIT CHANGES;
+
+This query will continuously output the count of orders for each item every 5 minutes.
+It returns a stream of results.
+The EMIT CHANGES clause is required.
+
+Use Cases:
+Live analytics
+Monitoring dashboards
+Alerts based on events
+
+
+Pull Queries (On-Demand / Snapshot)
+===================================
+
+One-time lookup against a materialized table.
+Only works on tables, not streams.
+Useful for APIs and current-state lookups.
+
+SELECT * FROM user_profiles WHERE user_id = 'u123';
+
+This returns the latest state for user u123.
+No EMIT CHANGES needed.
+Query returns once and stops.
+
+Use Cases:
+Microservices needing fast lookups
+User profile fetch
+Product price check
+
+
+Practcals:
+=========
+
+
+Creating a New Stream
+=====================
+
+CREATE STREAM readings (
+    sensor VARCHAR KEY,
+    location VARCHAR,
+    reading INT
+) WITH (
+    kafka_topic = 'readings',
+    partitions = 3,
+    value_format = 'json'
+);
+
+
+
+Inserting Rows into a Stream
+============================
+
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-1', 'wheel', 45);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-2', 'motor', 41);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-1', 'wheel', 42);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-3', 'muffler', 42);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-3', 'muffler', 40);
+
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-4', 'motor', 43);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-6', 'muffler', 43);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-5', 'wheel', 41);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-5', 'wheel', 42);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-4', 'motor', 41);
+
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-7', 'muffler', 43);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-8', 'wheel', 40);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-9', 'motor', 40);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-9', 'motor', 44);
+INSERT INTO readings (sensor, location, reading) VALUES ('sensor-7', 'muffler', 41);
+
+
+Transforming and Filtering data
+================================
+
+
+CREATE STREAM high_pri AS
+    SELECT sensor,
+           reading,
+           UCASE(location) AS location
+    FROM readings
+    WHERE reading > 41
+    EMIT CHANGES;
+    
+
+
+
+Push Query
+==========
+
+This type of query pushes a continuous stream of updates to the client. These queries are particularly suitable for 
+asynchronous application flows as they enable the clients to react to new information in real-time.
+
+However, unlike persistent queries, the server does not store the results of such queries in a Kafka topic.
+
+SELECT * FROM clean  WHERE reading > 41 EMIT CHANGES;
+
+
+ksqlDB CRUD Example with Queryable Table
+=======================================
+
+Step 1: Create the Source Stream (Source of "Create" and "Update")
+
+First, we define a Stream which represents the raw, immutable log of all changes (inserts and updates) to our users data. 
+We use a key column which is vital for Table state.
+
+SET 'auto.offset.reset' = 'earliest';
+
+CREATE STREAM USER_EVENTS (
+    user_id BIGINT KEY,
+    username VARCHAR,
+    email VARCHAR,
+    action_type VARCHAR -- We'll use this for a more controlled DELETE later
+) WITH (
+    KAFKA_TOPIC = 'user_events_topic',
+    VALUE_FORMAT = 'JSON',
+    PARTITIONS = 1
+);
+
+
+Step 2: Insert Data (The "Create" Operation)
+
+We insert initial records into the Stream. Since the Table doesn't exist yet, these are just events in the log.
+
+INSERT INTO USER_EVENTS (user_id, username, email, action_type) 
+VALUES (101, 'Alice', 'alice@example.com', 'INSERT');
+
+INSERT INTO USER_EVENTS (user_id, username, email, action_type) 
+VALUES (102, 'Bob', 'bob@example.com', 'INSERT');
+
+
+Step 3: Create the Queryable Table (Materialized View)
+
+This step creates the materialized view (the Table) that correctly maintains the latest state from the Stream. 
+This structure is what allows for real-time querying.
+
+CREATE TABLE USERS_LATEST_STATE AS
+    SELECT
+        user_id,
+        LATEST_BY_OFFSET(username) AS username,
+        LATEST_BY_OFFSET(email) AS email,
+        LATEST_BY_OFFSET(action_type) AS action_type
+    FROM
+        USER_EVENTS 
+    GROUP BY
+        user_id
+    HAVING LATEST_BY_OFFSET(action_type) != 'DELETE' -- Exclude logically deleted records
+    EMIT CHANGES;
+
+Step 4: Update and Read (The "Update" and "Read" Operations)
+
+An update is simply achieved by inserting a new record into the original Stream with the same key (user_id).
+
+INSERT INTO USER_EVENTS (user_id, username, email, action_type)
+VALUES (101, 'Alice', 'alice.new@example.com', 'UPDATE');
+
+We query the continuously updated Table (USERS_LATEST_STATE).
+SELECT * FROM USERS_LATEST_STATE WHERE user_id = 101;
+
+
+Step 5: Delete (The "Delete" Operation)
+
+In ksqlDB, a soft or logical delete is often used, where you mark a record for deletion. For a hard (tombstone) delete, 
+you need the special KAFKA value format.
+
+INSERT INTO USER_EVENTS (user_id, action_type)  VALUES (102, 'DELETE');
+
+
+Since the USERS_LATEST_STATE query has a HAVING LATEST_BY_OFFSET(action_type) != 'DELETE' clause, Bob's record will be filtered out.
+
+SELECT * FROM USERS_LATEST_STATE WHERE user_id = 102;
+
+
+
+
+To access the quries in java code:
+
+1. add the below dependency:
+<dependency>
+  <groupId>com.squareup.okhttp3</groupId>
+  <artifactId>okhttp</artifactId>
+  <version>4.9.3</version>
+</dependency>
+
+2. Pull Query (Java Code)
+
+import okhttp3.*;
+
+public class KsqlPullQuery {
+    public static void main(String[] args) throws Exception {
+        OkHttpClient client = new OkHttpClient();
+
+        String ksql = "SELECT * FROM user_profiles WHERE user_id = 'u123';";
+
+        String jsonBody = "{ \"ksql\": \"" + ksql + "\", \"streamsProperties\": {} }";
+
+        RequestBody body = RequestBody.create(jsonBody, MediaType.get("application/json"));
+
+        Request request = new Request.Builder()
+            .url("http://localhost:8088/query")  // default ksqlDB endpoint
+            .post(body)
+            .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) throw new RuntimeException("Failed: " + response);
+
+            System.out.println(response.body().string());
+        }
+    }
+}
+
+
+3. Push Query (Java Code)
+
+import okhttp3.*;
+
+public class KsqlPushQuery {
+    public static void main(String[] args) throws Exception {
+        OkHttpClient client = new OkHttpClient();
+
+        String ksql = "SELECT * FROM orders_stream EMIT CHANGES;";
+
+        String jsonBody = "{ \"sql\": \"" + ksql + "\", \"properties\": {} }";
+
+        RequestBody body = RequestBody.create(jsonBody, MediaType.get("application/json"));
+
+        Request request = new Request.Builder()
+            .url("http://localhost:8088/query-stream") // Streaming endpoint
+            .post(body)
+            .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) throw new RuntimeException("Failed: " + response);
+
+            BufferedSource source = response.body().source();
+
+            while (!source.exhausted()) {
+                String line = source.readUtf8Line();
+                if (line != null && !line.isEmpty()) {
+                    System.out.println(line);  // real-time output
+                }
+            }
+        }
+    }
+}

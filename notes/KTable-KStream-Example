@@ -1,0 +1,85 @@
+Let's consider a scenario where we have two Kafka topics: orders and customers. The orders topic contains information about customer orders, including the customer ID as the key and
+the order details as the value. The customers topic contains information about customers, including the customer ID as the key and the customer details as the value.
+
+We want to join the two streams based on the customer ID and enrich the order records with customer information. Here's how you can achieve that using KTable:
+
+import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.KTable;
+import java.util.Properties;
+
+public class OrderEnrichmentApp {
+    public static void main(String[] args) {
+        Properties config = new Properties();
+        config.put(StreamsConfig.APPLICATION_ID_CONFIG, "order-enrichment-application");
+        config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
+        config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
+
+        StreamsBuilder builder = new StreamsBuilder();
+
+        // Create a KTable from the 'customers' topic
+        KTable<String, String> customerTable = builder.table("customers");
+
+        // Create a KStream from the 'orders' topic
+        KStream<String, String> orderStream = builder.stream("orders");
+
+        // Join the KStream with the KTable based on the customer ID
+        KStream<String, String> enrichedOrders = orderStream
+                .join(customerTable,
+                        (orderKey, orderValue) -> orderKey, // Join key selector for the KStream
+                        (orderValue, customerValue) -> "Order: " + orderValue + ", Customer: " + customerValue // Value joiner
+                );
+
+        // Print the enriched orders to the console
+        enrichedOrders.foreach((key, value) -> System.out.println(value));
+
+        KafkaStreams streams = new KafkaStreams(builder.build(), config);
+        streams.start();
+
+        // Shutdown the stream application gracefully on termination
+        Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
+    }
+}
+
+
+
+In this example, we create a KTable called customerTable from the customers topic, representing the customer data. Then, we create a KStream called orderStream from the
+orders topic, representing the order data.
+
+Next, we join the orderStream with the customerTable based on the customer ID. The join operation enriches each order record with the corresponding customer information. 
+The enriched orders are then printed to the console.
+
+Finally, we configure and start the Kafka Streams application.
+
+This example showcases how KTable can be used to join and enrich data streams, in this case, combining order data with customer data based on a common key.
+
+
+In the example provided, we are using a KTable for the customers topic and a KStream for the orders topic based on the characteristics and requirements of the data in each topic. 
+Here's the rationale behind the choice:
+
+Customers (KTable): The customers topic contains information about customers, and it is assumed that this information represents a mutable view of the customer data. A KTable is suitable for
+representing a table-like structure that maintains the latest value for each key (customer ID). It provides the ability to perform interactive lookups and joins based on the key. In this case, 
+we can use a KTable to represent the customer data and enable efficient lookup and join operations with the order data.
+
+Orders (KStream): The orders topic contains information about individual orders placed by customers. Since each order is considered as an individual event, it makes sense to model it as a stream of
+records using a KStream. A KStream represents an unbounded, continuous stream of events or records, where we can perform real-time processing and transformations on each individual event. In this case, 
+we want to process and transform each order record independently and join it with the customer information.
+
+By using a KTable for customers and a KStream for orders, we can leverage the respective strengths of each abstraction. The KTable provides a table-like view of the customer data, enabling efficient 
+lookup and join operations. The KStream allows us to process and transform individual order records in real-time, facilitating event-by-event processing.
+
+This combination of KTable and KStream allows us to perform join operations between the customer data (represented as a KTable) and the order data (represented as a KStream), enriching the order 
+records with the corresponding customer information in a scalable and real-time manner.
+
+
+
+
+
+
+
+
+

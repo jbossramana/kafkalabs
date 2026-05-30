@@ -1,0 +1,25 @@
+spring:
+
+  kafka:
+
+    bootstrap-servers: localhost:9092
+
+    producer:
+
+      acks: all
+
+      retries: 2147483647
+
+      transaction-id-prefix: tx-order-
+
+      key-serializer:
+        org.apache.kafka.common.serialization.StringSerializer
+
+      value-serializer:
+        org.springframework.kafka.support.serializer.JsonSerializer
+
+      properties:
+
+        enable.idempotence: true
+
+        max.in.flight.requests.per.connection: 5

@@ -1,0 +1,30 @@
+Order-0
+  |_ segment-file(00000000000.log)
+          |_ offsets  0   1   2   3 .....   9
+  |_ segment-file(00000000010.log)
+          |_ offsets  10 11 12 ...... 19
+  |_ segment-file(00000000020.log)
+  |_ .....
+Order-1
+  |_ segment-file(00000000000.log)
+          |_ offsets  0   1   2   3 .....   9
+  |_ segment-file(00000000010.log)
+          |_ offsets  10 11 12 ...... 19
+  |_ segment-file(00000000020.log)
+  |_ .....
+Order-2
+  |_ segment-file(00000000000.log)
+          |_ offsets  0   1   2   3 .....   9
+  |_ segment-file(00000000010.log)
+          |_ offsets  10 11 12 ...... 19
+  |_ segment-file(00000000020.log)
+
+
+* segment file default size is 1gb
+
+segment-ms default time is 7 days
+
+log.retention.hours :  7 days
+
+
+

@@ -1,0 +1,42 @@
+1. Open a terminal from /home/ubuntu/Desktop/kafka/confluent-7.3.3/bin
+
+2. run the below command
+./confluent-hub install confluentinc/kafka-connect-jdbc:5.4.11
+
+3. copy mysql driver 
+   from:  STS-> 03-kafka-stream-jdbc-transormation-> driver -> 03-kafka-stream-jdbc-transormation
+   to: /home/ubuntu/Desktop/kafka/confluent-7.3.3/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib
+
+4. move filestream-connectors
+   from :  /home/ubuntu/Desktop/kafka/confluent-7.3.3/share
+   to :  /home/ubuntu/Desktop/kafka/confluent-7.3.3/share/confluent-hub-components
+
+5. Start the confluent server
+   ./confluent local services start
+
+6. From Control Center -> connect -> connect-default -> upload connector confi file -> 
+   /home/ubuntu/Desktop/kafka/labs/03-kafka-stream-jdbc-transormation/kafka-connect-jdbc-source.json
+   Observe dbc_source_mysql_foobar_01 will be in running state
+
+7. check mysql database 
+   > sudo mysql -uroot -proot
+   mysql> use demo
+   mysql> show tables
+   mysql> select * from foorbar
+
+8. check the data in Control Center -> topics -> mysql-foobar
+
+9. Insert the new record in mysql
+   mysql> insert into foobar (c1,c2) values(4,'prayer');
+
+10. check the data in Control Center -> topics -> mysql-foobar
+
+11. update the record in mysql
+    mysql> update foobar set c2='nature' where c1=4;
+
+12. check the data in Control Center -> topics -> mysql-foobar
+
+13. From Control Center -> connect -> connect-default -> upload connector confi file -> 
+   /home/ubuntu/Desktop/kafka/labs/03-kafka-stream-jdbc-transormation/kafka-connect-file-sink.json
+
+14. Observe the data is written in confluent-7.3.3/bin/kafka-mysql-foobar.txt 

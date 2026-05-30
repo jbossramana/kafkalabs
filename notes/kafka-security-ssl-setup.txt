@@ -1,0 +1,53 @@
+1. Generate Server certificates:
+
+
+openssl req -new -newkey rsa:4096 -days 365 -x509 -subj "/CN=Kafka-Security-CA" -keyout ca-key -out ca-cert -nodes
+export SRVPASS=kafka@123
+keytool -genkey -keystore kafka.server.keystore.jks -validity 365 -storepass $SRVPASS -keypass $SRVPASS  -dname "CN=localhost" -storetype pkcs12
+keytool -keystore kafka.server.keystore.jks -certreq -file cert-file -storepass $SRVPASS -keypass $SRVPASS
+openssl x509 -req -CA ca-cert -CAkey ca-key -in cert-file -out cert-signed -days 365 -CAcreateserial -passin pass:$SRVPASS
+keytool -keystore kafka.server.truststore.jks -alias CARoot -import -file ca-cert -storepass $SRVPASS -keypass $SRVPASS -noprompt
+keytool -keystore kafka.server.keystore.jks -alias CARoot -import -file ca-cert -storepass $SRVPASS -keypass $SRVPASS -noprompt
+keytool -keystore kafka.server.keystore.jks -import -file cert-signed -storepass $SRVPASS -keypass $SRVPASS -noprompt
+
+
+2. Generate a client certificate
+
+export CLIPASS=clientpass
+
+keytool -keystore kafka.client.truststore.jks -alias CARoot -import -file ca-cert  -storepass $CLIPASS -keypass $CLIPASS -noprompt
+
+3. in server.properties, add the below entries
+
+listeners=PLAINTEXT://0.0.0.0:9092,SSL://0.0.0.0:9093
+advertised.listeners=PLAINTEXT://localhost:9092,SSL://localhost:9093
+zookeeper.connect=localhost:2181
+
+ssl.keystore.location=/home/ubuntu/Desktop/kafka/ssl/kafka.server.keystore.jks
+ssl.keystore.password=kafka@123
+ssl.key.password=kafka@123
+ssl.truststore.location=/home/ubuntu/Desktop/kafka/ssl/kafka.server.truststore.jks
+ssl.truststore.password=kafka@123
+ssl.enabled.protocols=TLSv1.2,TLSv1.1,TLSv1
+
+
+4. create client.properties
+
+security.protocol=SSL
+ssl.truststore.location=/home/ubuntu/Desktop/kafka/ssl/kafka.client.truststore.jks
+ssl.truststore.password=clientpass
+
+
+5. copy client.properties in /bin folder
+
+6. TEST the consumer and producer 
+
+sh kafka-console-producer.sh  --bootstrap-server localhost:9093 --topic kafka-security-topic --producer.config client.properties
+
+sh kafka-console-consumer.sh --bootstrap-server localhost:9093 --topic kafka-security-topic --consumer.config client.properties --from-beginning
+
+zookeeper security:
+
+Ref: https://docs.confluent.io/platform/current/security/security_tutorial.html#generating-keys-certs
+
+

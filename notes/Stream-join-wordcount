@@ -1,0 +1,20 @@
+KStream<String, String> stream1 = builder.stream("input-topic1");
+KStream<String, Integer> stream2 = builder.stream("input-topic2")
+        .mapValues(Integer::parseInt);
+
+// Join stream1 with stream2 using a 10-second window
+KStream<String, String> joinedStream = stream1.join(
+        stream2,
+        (value1, value2) -> value1 + "-" + value2,
+        JoinWindows.of(Duration.ofSeconds(10))
+);
+
+// Write the output to a topic
+joinedStream.to("output-topic");
+
+
+In this example, we are joining stream1 and stream2 based on the common key. The join operation will create a new stream where each record 
+will be the result of combining a record from stream1 with a record from stream2 that have the same key and that occurred within a 10-second window.
+The output stream will contain records with the same key as the input streams, and the value will be a string concatenation of the values from the 
+two input streams. Finally, we are writing the output stream to a topic.
+

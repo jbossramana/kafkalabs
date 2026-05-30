@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.codenotfound.kafka.SpringKafkaApplicationTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 27.284 sec - in com.codenotfound.kafka.SpringKafkaApplicationTest

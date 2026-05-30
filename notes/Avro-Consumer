@@ -1,0 +1,42 @@
+
+
+Ref to : 09-usecase-order-service
+
+1. Specific-Record:
+application.yaml
+
+consumer: 
+ properties:
+         specific.avro.reader: true
+
+@Service
+public class Consumer {
+
+  @KafkaListener(topics = "new_orders", groupId = "order_id")
+  public void consume(ConsumerRecord<String, Order> record) {
+
+	  Order order = record.value();
+	  System.out.println("insdie order :"+ order);
+  }
+}
+
+2.1. Generic-Record:
+application.yaml
+
+consumer: 
+ properties:
+         specific.avro.reader: false
+
+@Service
+public class Consumer {
+
+  @KafkaListener(topics = "new_orders", groupId = "order_id")
+  public void consume(ConsumerRecord<String, GenericRecord> record) {
+
+	  GenericRecord order = record.value();
+	  System.out.println("insdie order :"+ order);
+  }
+}
+
+
+

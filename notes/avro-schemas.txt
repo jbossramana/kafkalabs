@@ -1,0 +1,27 @@
+props.put(AbstractKafkaAvroSerDeConfig.AUTO_REGISTER_SCHEMAS, false);
+props.put(AbstractKafkaAvroSerDeConfig.USE_LATEST_VERSION, true);
+
+props.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, "true");
+
+generated version of the Employee object. If we did not, then it would use the Avro GenericRecord
+ instead of our generated Employee object
+
+
+
+For spring properties file:
+ consumer:
+      group-id: my-microservice
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      properties:
+        specific.avro.reader: false
+        use.latest.version: true 
+
+ producer:
+     properties:
+        auto.register.schemas:true
+Rest call:
+http://localhost:8081/subjects/<topic-name>-value/versions
+http://localhost:8081/subjects/mysql-foobar-value/versions/1 | jq
+http://localhost:8081/subjects/Employee/versions/latest"

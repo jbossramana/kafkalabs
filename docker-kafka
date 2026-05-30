@@ -1,0 +1,204 @@
+# 1. Pull the Kafka 4.1.1 image
+
+docker pull apache/kafka:4.1.1
+(or)
+docker pull apache/kafka-native:4.1.1
+
+# 2. Run the kafka server
+docker run -d ^
+  --name kafka ^
+  -p 9092:9092 ^
+  -e KAFKA_NODE_ID=1 ^
+  -e KAFKA_PROCESS_ROLES=broker,controller ^
+  -e KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093 ^
+  -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 ^
+  -e KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093 ^
+  -e KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER ^
+  -v kafka_data:/var/lib/kafka/data ^
+  apache/kafka:4.1.1
+
+# 3. To check kafka logs
+docker logs -f kafka
+
+# 4. To inspect kafka folder inside the container
+docker exec -it kafka bash  # replace with kafka with container name
+<container-name>cd /opt/kafka
+Note: you will find all the folders of kafka
+
+# 5. To create a topic
+<container-name>sh kafka-topics.sh  --bootstrap-server localhost:9092 --create --topic first-topic --parttions 3 --replication-factor 1
+
+# Note1 : 
+The data logs are created in /tmp/kafka-logs director
+  
+# Note2: 
+In docker run command we passed data volume as:
+-v kafka_data:/var/lib/kafka/data
+  
+But the Kafka container is writing logs to /tmp/kafka-logs instead of /var/lib/kafka/data.
+  
+The apache/kafka:4.1.1 Docker image (KRaft mode) uses /tmp/kafka-logs as the default log directory unless you explicitly override it with KAFKA_LOG_DIRS.
+•	log.dirs=/tmp/kafka-logs in server.properties
+•	Mounted volume /var/lib/kafka/data is never used unless you set KAFKA_LOG_DIRS=/var/lib/kafka/data
+
+# Note3:
+/etc — Configuration files
+      Purpose: Stores configuration files for system programs and services.
+
+/opt — Optional / Third-party software
+      Purpose: Contains optional or third-party applications that are not part of the base OS.
+      Typical usage:
+          /opt/kafka/
+              bin/        → executables
+              config/     → configuration files
+              libs/       → libraries
+              logs/       → internal logs (sometimes)
+
+
+/var — Variable data files
+      Purpose: Stores variable or persistent data created by programs while they run.
+      Contents: Logs, spool files, caches, runtime databases.
+
+=========================================================================================================================
+
+*** Use a user-defined network and container names
+Create a Docker network :
+docker network create kafka-net
+
+Controller-only container:
+     The controller is responsible for metadata management. It does not handle client traffic directly.
+
+docker run -d ^
+  --name kafka-controller ^
+   --network kafka-net ^
+  -p 9093:9093 ^
+  -e KAFKA_NODE_ID=1 ^
+  -e KAFKA_PROCESS_ROLES=controller ^
+  -e KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER ^
+  -e KAFKA_LISTENERS=CONTROLLER://:9093 ^
+  -e KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka-controller:9093 ^
+  -e KAFKA_LOG_DIRS=/var/lib/kafka/controller-data ^
+  -v kafka_controller_data:/var/lib/kafka/controller-data ^
+   --user root ^
+  apache/kafka:4.1.1
+
+
+Broker-only container:
+    The broker handles client traffic (producers/consumers). It connects to the controller for metadata.
+
+docker run -d ^
+  --name kafka-broker ^
+  --network kafka-net ^
+  -p 9092:9092 ^
+  -e KAFKA_NODE_ID=2 ^
+  -e KAFKA_PROCESS_ROLES=broker ^
+  -e KAFKA_LISTENERS=PLAINTEXT://:9092 ^
+  -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 ^
+  -e KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka-controller:9093 ^
+  -e KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER ^
+  -e KAFKA_LOG_DIRS=/var/lib/kafka/broker-data ^
+  -v kafka_broker_data:/var/lib/kafka/broker-data ^
+ --user root ^
+  apache/kafka:4.1.1
+
+Environment variables (-e)
+Variable	                                  Purpose
+KAFKA_NODE_ID=1	                             Unique node ID for this Kafka instance
+KAFKA_PROCESS_ROLES=broker,controller	       Run both roles in one container (KRaft mode)
+KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093	Kafka listens for clients on 9092 and internal controller communication on 9093
+KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092	Host/port advertised to clients outside container
+KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093	Controller quorum info (single-node setup)
+KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER	Names the internal controller listener
+
+=========================================================================================================================
+
+To get details: 
+docker inspect apache/kafka:4.1.1  or docker inspect apache/kafka-native:4.1.1
+
+1️⃣ apache/kafka:4.1.1
+
+Official Apache Kafka image.
+
+Based on Alpine / Debian Linux with OpenJDK included.
+
+Designed to run Kafka in a container, including KRaft mode.
+
+Includes basic runtime only:
+
+Kafka server
+
+Minimal scripts for startup
+
+Some CLI tools may not be included (like kafka-storage in 4.x)
+
+Recommended for production if you don’t need extra tools in the container.
+
+Uses classic JVM-based Kafka runtime.
+
+Pros:
+
+Smaller image, maintained by Apache.
+
+Simple to run in Docker.
+
+Cons:
+
+Some CLI tools may be missing.
+
+Default KRaft storage may go to /tmp/kafka-logs.
+
+Might require environment variables for volume mapping, storage formatting.
+
+
+2️⃣ apache/kafka-native:4.1.1
+
+“Native” build of Kafka 4.x using GraalVM native-image.
+
+Kafka server is compiled to a native binary, not JVM.
+
+Faster startup, smaller runtime memory usage.
+
+Intended for cloud-native / containerized environments.
+
+CLI tools are usually included.
+
+Still supports KRaft mode.
+
+
+Pros:
+
+Faster startup.
+
+Lower memory footprint (no JVM warm-up).
+
+
+
+Cons:
+
+Some plugins or Java-based libraries may not work (rare).
+
+Less battle-tested than standard JVM Kafka in some environments.
+
+Note:
+
+Kafka source code (Java/Scala) → compiled into JVM bytecode → fed into GraalVM native-image → produces a native Linux binary.
+
+The Docker image then just contains this binary + necessary runtime libraries.
+
+The image is “built from source code into a binary” in the sense that you don’t need Java to run it.
+
+
+docker run -d ^
+  --name kafka-native ^
+  -p 9092:9092 ^
+  -e KAFKA_NODE_ID=1 ^
+  -e KAFKA_PROCESS_ROLES=broker,controller ^
+  -e KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093 ^
+  -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 ^
+  -e KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093 ^
+  -e KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER ^
+  -e KAFKA_LOG_DIRS=/var/lib/kafka/data ^
+  -v kafka_data:/var/lib/kafka/data ^
+  apache/kafka-native:4.1.1
+
+
