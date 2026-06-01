@@ -1,6 +1,12 @@
 Confluent 8.2.1 Version
 ======================
 
+>> Add the below entries in profile file
+export CONFLUENT_HOME=/home/ubuntu/Desktop/kafka/confluent-8.2.1
+export CONFLUENT_CURRENT="/home/ubuntu/Desktop/kafka/logs"
+export CONTROL_CENTER_HOME=/home/ubuntu/Desktop/kafka/softwares/confluent-control-center-next-gen-2.3.0
+
+
 1. Start the internal Prometheus engine
 ./prometheus-start
 
