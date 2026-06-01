@@ -1,0 +1,18 @@
+Confluent 8.2.1 Version
+======================
+
+1. Start the internal Prometheus engine
+./prometheus-start
+
+2. Route Alertmanager cleanly to port 9098
+export ALERTMANAGER_PORT=9098
+./alertmanager-start
+
+3. Start the confluent platform
+./confluent local services start
+
+4. prometheus console
+http://localhost:9090
+
+5. Confluent control center 
+http://localhost:9021
