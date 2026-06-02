@@ -16,24 +16,27 @@ export CONFLUENT_HOME=/home/ubuntu/Desktop/kafka/confluent-8.2.1
 export CONFLUENT_CURRENT="/home/ubuntu/Desktop/kafka/logs"
 export CONTROL_CENTER_HOME=/home/ubuntu/Desktop/kafka/softwares/confluent-control-center-next-gen-2.3.0
 
+>> Start the confluent platform
+./confluent local services start
 
-1. Start the internal Prometheus engine
+>> Confluent control center 
+http://localhost:9021
+
+
+#############################################################################################################
+From  confluent-control-center-next-gen-2.3.0/bin
+
+>> Start the internal Prometheus engine
 ./prometheus-start
 
-2. Route Alertmanager cleanly to port 9098
+>> Route Alertmanager cleanly to port 9098
 export ALERTMANAGER_PORT=9098
 ./alertmanager-start
 
-3. Start the confluent platform
-./confluent local services start
-
-4. prometheus console
+>> prometheus console
 http://localhost:9090
-
-5. Confluent control center 
-http://localhost:9021
-
 #############################################################################################################
+
 Telemetry Reporter to view broker metrics (Confluent Cloud)
 
 > add the below properties in server.properties
