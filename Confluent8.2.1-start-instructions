@@ -1,7 +1,17 @@
 Confluent 8.2.1 Version
 ======================
 
->> Add the below entries in profile file
+>> add the below entries in server.properties 
+
+##################### Confluent Metrics Reporter #######################
+
+metric.reporters=io.confluent.metrics.reporter.ConfluentMetricsReporter 
+confluent.metrics.reporter.bootstrap.servers=localhost:9092
+confluent.metrics.reporter.topic.replicas=1
+confluent.metrics.reporter.security.protocol=PLAINTEXT
+
+
+>> Add the below entries in /etc/profile
 export CONFLUENT_HOME=/home/ubuntu/Desktop/kafka/confluent-8.2.1
 export CONFLUENT_CURRENT="/home/ubuntu/Desktop/kafka/logs"
 export CONTROL_CENTER_HOME=/home/ubuntu/Desktop/kafka/softwares/confluent-control-center-next-gen-2.3.0
@@ -22,3 +32,15 @@ http://localhost:9090
 
 5. Confluent control center 
 http://localhost:9021
+
+#############################################################################################################
+Telemetry Reporter to view broker metrics (Confluent Cloud)
+
+> add the below properties in server.properties
+
+confluent.telemetry.enabled=true
+confluent.telemetry.api.key=<CLOUD_API_KEY>
+confluent.telemetry.api.secret=<CLOUD_API_SECRET>
+
+We need a Confluent Cloud account and a Cloud API Key. Confluent documentation explicitly states that telemetry 
+reporting (Health+/cloud telemetry) requires a Confluent Cloud API key and secret.
