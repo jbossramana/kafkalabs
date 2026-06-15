@@ -154,6 +154,16 @@ log.retention.check.interval.ms=300000
 group.initial.rebalance.delay.ms=0
 
 
+| Property                 | Simple Description                                                                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **LeaderId**             | The controller node currently acting as the **boss** of the KRaft quorum.                                                                         |
+| **LeaderEpoch**          | The **leadership term number**. It increases whenever a new leader is elected.                                                                    |
+| **HighWatermark**        | The **last committed metadata record** that is safely stored on the majority of controllers.                                                      |
+| **MaxFollowerLag**       | The **maximum number of metadata records a follower is behind the leader**.                                                                       |
+| **MaxFollowerLagTimeMs** | The **time for which the slowest follower has been lagging behind the leader** (in milliseconds). `-1` means Kafka cannot determine the lag time. |
+| **CurrentVoters**        | The controllers that can **participate in leader elections and voting**.                                                                          |
+| **CurrentObservers**     | Nodes that can observe metadata updates but **cannot vote** in elections.                                                                         |
+
 
 
 
