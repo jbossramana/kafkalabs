@@ -165,6 +165,25 @@ group.initial.rebalance.delay.ms=0
 | **CurrentObservers**     | Nodes that can observe metadata updates but **cannot vote** in elections.                                                                         |
 
 
+
+Majority Quorum
+===============
+
+Definition:
+A majority quorum means more than half of the controller nodes are available and agree on a decision.
+
+Formula
+
+Majority Needed = ⌊ N / 2 ⌋ + 1
+
+Where:
+
+N = Total number of KRaft controllers
+
+The symbol ⌊ ⌋ is called the floor function
+remove the decimal part and keep only the whole number.
+
+
 Failure Tolerance
 =================
 
