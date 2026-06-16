@@ -65,6 +65,27 @@ output:
 6). curl -X DELETE -H "Content-Type: application/vnd.kafka.v2+json" \
       http://localhost:8082/consumers/my_avro_consumer/instances/my_consumer_instance
 
+Version-2
+=========
+
+curl -X POST \
+  -H "Content-Type: application/vnd.kafka.avro.v2+json" \
+  -H "Accept: application/vnd.kafka.v2+json" \
+  --data '{
+    "value_schema": "{\"type\":\"record\",\"name\":\"User\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"flag\",\"type\":\"string\",\"default\":\"\"}]}",
+    "records": [
+      {
+        "value": {
+          "name": "testUser",
+          "flag": "ACTIVE"
+        }
+      }
+    ]
+  }' \
+  "http://localhost:8082/topics/avrotest"
+
+
+
 output:
 # No content in response
 
