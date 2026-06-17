@@ -52,26 +52,39 @@ openssl x509 -req -CA ca-cert -CAkey ca-key -in cert-file-client-$USERNAME -out 
 keytool -keystore kafka.server.truststore.jks -alias $USERNAME -import -file cert-signed-client-$USERNAME -storepass $SSLPASSPHRASE
 
 
-2. add the below entries in server.properties
+2. Replace server.properties
 
-listeners=PLAINTEXT://:9093,CONTROLLER://:9094
-listeners=SSL://:9093
+process.roles=broker,controller
+node.id=1
+
+controller.quorum.voters=1@localhost:9094
+listeners=SSL://localhost:9093,CONTROLLER://localhost:9094
 advertised.listeners=SSL://localhost:9093
-listener.security.protocol.map=SSL:SSL
-security.protocol=SSL
-security.inter.broker.protocol=SSL
+controller.listener.names=CONTROLLER
+listener.security.protocol.map=SSL:SSL,CONTROLLER:SSL
+inter.broker.listener.name=SSL
+
 ssl.keystore.type=JKS
 ssl.keystore.location=/home/ubuntu/Desktop/kafka/ssl/kafka.server.keystore.jks
 ssl.keystore.password=kafka@123
 ssl.key.password=kafka@123
+
 ssl.truststore.type=JKS
 ssl.truststore.location=/home/ubuntu/Desktop/kafka/ssl/kafka.server.truststore.jks
 ssl.truststore.password=kafka@123
-authorizer.class.name=kafka.security.authorizer.AclAuthorizer
+
+ssl.client.auth=required
+ssl.enabled.protocols=TLSv1.2,TLSv1.3
+authorizer.class.name=org.apache.kafka.metadata.authorizer.StandardAuthorizer
 allow.everyone.if.no.acl.found=false
 super.users=User:CN=localhost,OU=kafka,O=kafka,L=kafka,ST=kafka,C=XX;User:CN=acladmin,OU=kafka,O=kafka,L=kafka,ST=kafka,C=XX
-ssl.client.auth=required
-ssl.enabled.protocols=TLSv1.2,TLSv1.1,TLSv1
+
+offsets.topic.replication.factor=1
+transaction.state.log.replication.factor=1
+transaction.state.log.min.isr=1
+default.replication.factor=1
+min.insync.replicas=1
+
 
 
 3. create a file client-ssl-auth.properties  (create the file in kafka/bin )
@@ -106,7 +119,7 @@ sh kafka-acls.sh --bootstrap-server localhost:9093  --add  --allow-principal  Us
 sh kafka-acls.sh --bootstrap-server localhost:9093  --add  --allow-principal User:"CN=acladmin,OU=kafka,O=kafka,L=kafka,ST=kafka,C=XX" \
 --producer --topic acltest --group acl-consumer --command-config client-ssl-auth.properties
 
-sh kafka-console-producer.sh --bootstrap-server localhost:9093  --topic acltest   --producer.config client-ssl-auth.properties
+sh kafka-console-producer.sh --bootstrap-server localhost:9093  --topic acltest   --command-config client-ssl-auth.properties
 
 sh kafka-console-consumer.sh --bootstrap-server localhost:9093 --command-config client-ssl-auth.properties --topic acltest --partition 0 --offset earliest
 
