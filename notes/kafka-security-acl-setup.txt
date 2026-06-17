@@ -54,6 +54,7 @@ keytool -keystore kafka.server.truststore.jks -alias $USERNAME -import -file cer
 
 2. add the below entries in server.properties
 
+listeners=PLAINTEXT://:9093,CONTROLLER://:9094
 listeners=SSL://:9093
 advertised.listeners=SSL://localhost:9093
 listener.security.protocol.map=SSL:SSL
