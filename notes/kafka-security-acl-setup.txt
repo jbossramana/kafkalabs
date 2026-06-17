@@ -81,8 +81,11 @@ ssl.keystore.location=/home/ubuntu/Desktop/kafka/ssl/kafka.client.keystore.jks
 ssl.keystore.password=client@123 
 ssl.key.password=client@123
 
-4. Start Zookeeper
-sh zookeeper-server-start.sh ../config/zookeeper.properties
+4. Create a cluster-id & Format the storage directory
+
+KAFKA_CLUSTER_ID="$(sh kafka-storage.sh random-uuid)"
+echo $KAFKA_CLUSTER_ID
+sh kafka-storage.sh format -t $KAFKA_CLUSTER_ID -c ../config/server.properties
 
 
 5. Start Kafka Server
@@ -104,7 +107,7 @@ sh kafka-acls.sh --bootstrap-server localhost:9093  --add  --allow-principal Use
 
 sh kafka-console-producer.sh --bootstrap-server localhost:9093  --topic acltest   --producer.config client-ssl-auth.properties
 
-sh kafka-console-consumer.sh --bootstrap-server localhost:9093 --consumer.config  client-ssl-auth.properties   --topic acltest --from-beginning
+sh kafka-console-consumer.sh --bootstrap-server localhost:9093 --command-config client-ssl-auth.properties --topic acltest --partition 0 --offset earliest
 
 
 Reference :
