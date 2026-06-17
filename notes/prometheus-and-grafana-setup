@@ -1,11 +1,13 @@
 1. copy jmx_prometheus_javaagent-0.18.0.jar and kafka-3_0_0.yml in bin directory
 
+export KAFKA_OPTS="-javaagent:/home/ubuntu/Desktop/kafka/softwares/kafka_2.13-4.3.0/bin/jmx_prometheus_javaagent-0.18.0.jar=8080:/home/ubuntu/Desktop/kafka/softwares/kafka_2.13-4.3.0/bin/kafka-3_0_0.yml"
+
 2. Kafka standalone server
 
 KAFKA_CLUSTER_ID="$(sh kafka-storage.sh random-uuid)"
 echo $KAFKA_CLUSTER_ID
-sh kafka-storage.sh format -t $KAFKA_CLUSTER_ID -c ../config/server.properties
-sh kafka-server-start.sh ../config/server.properties --standalone
+sh kafka-storage.sh format -t $KAFKA_CLUSTER_ID -c ../config/server.properties --standalone
+sh kafka-server-start.sh ../config/server.properties 
 
 3. Once after we start the Kafka broker if we launch the http://localhost:8080/metrics url it should show 
     as metrics endpoint with the list of metrics.
