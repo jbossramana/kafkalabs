@@ -1,0 +1,106 @@
+1. Create Topic
+
+kafka-topics.sh --bootstrap-server localhost:9092 --create --topic perf-test --partitions 3 --replication-factor 1
+
+2. Producer Performance Test
+
+Send 100,000 messages, each 1 KB.
+
+kafka-producer-perf-test.sh --topic perf-test --num-records 100000 --record-size 1024 --throughput -1 --producer-props bootstrap.servers=localhost:9092
+
+======================================
+Parameter	            Meaning
+num-records	        Number of messages
+record-size	        Message size in bytes
+throughput -1	      Maximum speed
+bootstrap.servers	  Kafka broker
+======================================
+
+3. Producer with Acks=all
+
+kafka-producer-perf-test.sh --topic perf-test --num-records 100000 --record-size 1024 --throughput -1 --producer-props bootstrap.servers=localhost:9092 acks=all
+
+================================
+acks=0     Fastest
+acks=1     Balanced
+acks=all   Safest but slower
+================================
+
+4. Producer Compression Test
+
+kafka-producer-perf-test.sh --topic perf-test --num-records 100000 --record-size 1024 --throughput -1 --producer-props bootstrap.servers=localhost:9092 compression.type=snappy
+
+================
+No Compression
+Snappy
+LZ4
+ZSTD
+===============
+
+5. Consumer Performance Test
+
+Consume from beginning.
+
+kafka-consumer-perf-test.sh --bootstrap-server localhost:9092 --topic perf-test --messages 100000 --from-beginning
+
+
+6. Multi-Partition Test
+
+Create topic:
+
+kafka-topics.sh --bootstrap-server localhost:9092 --create --topic perf-test-12 --partitions 12 --replication-factor 1
+
+=================================
+3 partitions  -> Lower throughput
+
+12 partitions -> Higher throughput
+==================================
+
+7. Demonstrate Batching Impact
+
+Small batch:
+
+kafka-producer-perf-test.sh --topic perf-test --num-records 100000 --record-size 100 --producer-props bootstrap.servers=localhost:9092 batch.size=16384
+
+Large batch:
+
+kafka-producer-perf-test.sh --topic perf-test --num-records 100000 --record-size 100 --producer-props bootstrap.servers=localhost:9092 batch.size=65536
+
+====================
+Larger batches
+      ↓
+Fewer network calls
+      ↓
+Higher throughput
+====================
+
+
+Question & Answers
+===================
+
+>> Why is producer slower with acks=all?
+
+Leader writes
+     ↓
+Followers replicate
+     ↓
+Acknowledgment sent
+
+More durability, slightly lower throughput.
+
+>> Why do more partitions increase throughput?
+
+Kafka can write in parallel.
+
+Use Case	            Priority
+==============================
+
+Banking	              Latency + Reliability
+Logging	              Throughput
+IoT	                  Throughput
+Trading	              Low Latency
+
+
+
+
+
