@@ -41,7 +41,7 @@ ZSTD
 
 Consume from beginning.
 
-kafka-consumer-perf-test.sh --bootstrap-server localhost:9092 --topic perf-test --messages 100000 --from-beginning
+kafka-consumer-perf-test.sh --bootstrap-server localhost:9092 --topic perf-test --messages 100000 
 
 
 6. Multi-Partition Test
