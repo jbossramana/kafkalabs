@@ -2,7 +2,7 @@
 > kafka-storage.bat random-uuid
 
 2. Format Storage
-> kafka-storage.bat format --standalone -t <random-uuid> -c ..\..\config\server.properties
+> kafka-storage.bat format --standalone -t random-uuid -c ..\..\config\server.properties
 
 3. Start Kafka Server
 > kafka-server-start.bat ..\..\config\server.properties
