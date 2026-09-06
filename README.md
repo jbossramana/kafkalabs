@@ -9,5 +9,5 @@
 
 4. Create a Topic
 
-> kafka-topics.bat --create --topic test-topic --bootstrap-server localhost:9092
+> kafka-topics.bat --create --topic order-topic --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
 
